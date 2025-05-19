@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGO_URI")
+}
+
+model users {
+  id                   String     @id @default(auto()) @map("_id") @db.ObjectId
+  email                String     @unique
+  firstName            String
+  lastName             String
+  role                 String     @default("teacher")
+  status               String     @default("active")
+  level                String?
+  subLevel             String?
+  password             String
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  isAdmin              Boolean    @default(false)
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  student              students[]
+}
+
+model students {
+  id                   String    @id @default(auto()) @map("_id") @db.ObjectId
+  firstName            String
+  lastName             String
+  otherName            String?
+  dateOfBirth          DateTime
+  level                String
+  subLevel             String
+  gender               String
+  yearAdmitted         DateTime
+  studentId            String?
+  stateOfOrigin        String
+  localGvt             String
+  homeTown             String
+  sponsorName          String?
+  sponsorRelationship  String?
+  sponsorPhoneNumber   String?
+  sponsorEmail         String?
+  imageUrl             String?
+  imagePublicId        String?
+  password             String
+  isStudent            Boolean   @default(true)
+  isPaid               Boolean   @default(false)
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+
+  userId String @db.ObjectId
+  user   users  @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
