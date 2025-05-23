@@ -14,7 +14,7 @@ const app = express();
 const corsOptions = {
   // origin: ['https://www.bendonaldschools.com', 'https://bendonaldschools.com'],
 
-  origin: 'https://new-school-client.vercel.app/',
+  origin: 'https://new-school-client.vercel.app',
   // origin: 'http://localhost:3000',
   credentials: true,
 };
