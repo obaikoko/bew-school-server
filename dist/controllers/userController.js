@@ -26,19 +26,41 @@ const crypto_1 = __importDefault(require("crypto"));
 const authUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = validators_1.authUserSchema.parse(req.body);
-        const user = yield prisma_1.prisma.users.findUnique({ where: { email } });
+        const user = yield prisma_1.prisma.users.findUnique({
+            where: { email },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                level: true,
+                subLevel: true,
+                isAdmin: true,
+                role: true,
+                status: true,
+                password: true,
+            },
+        });
         if (!user || !(yield bcrypt_1.default.compare(password, user.password))) {
             res.status(401);
             throw new Error('Invalid Email or Password');
         }
-        (0, generateToken_1.default)(res, user.id);
-        res.status(200).json({
-            _id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            isAdmin: user.isAdmin,
+        const authenticatedUser = yield prisma_1.prisma.users.findUnique({
+            where: { email },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                level: true,
+                subLevel: true,
+                isAdmin: true,
+                role: true,
+                status: true,
+            },
         });
+        (0, generateToken_1.default)(res, user.id);
+        res.status(200).json(authenticatedUser);
     }
     catch (error) {
         throw error;
@@ -86,17 +108,20 @@ const registerUser = (0, express_async_handler_1.default)((req, res) => __awaite
                 email,
                 password: hashedPassword,
             },
-        });
-        res.status(201);
-        res.json({
-            message: 'User registered successfully',
-            user: {
-                id: user.id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                level: true,
+                subLevel: true,
+                isAdmin: true,
+                role: true,
+                status: true,
             },
         });
+        res.status(201);
+        res.json(user);
     }
     catch (error) {
         throw error;
@@ -137,11 +162,9 @@ exports.getUserProfile = getUserProfile;
 // @privacy Private Admin
 const updateUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const validateData = validators_1.updateUserSchema.parse(req.body);
-    const { firstName, lastName, email, password, level, subLevel, isAdmin } = validateData;
-    console.log('Raw isAdmin:', req.body.isAdmin);
-    console.log('Parsed isAdmin:', validateData.isAdmin);
+    const { userId, firstName, lastName, email, password, level, role, status, subLevel, isAdmin, } = validateData;
     const user = yield prisma_1.prisma.users.findFirst({
-        where: { id: req.params.id },
+        where: { id: userId },
     });
     if (!user) {
         res.status(404);
@@ -164,6 +187,8 @@ const updateUser = (0, express_async_handler_1.default)((req, res) => __awaiter(
             lastName: lastName !== null && lastName !== void 0 ? lastName : user.lastName,
             email: email !== null && email !== void 0 ? email : user.email,
             level: level !== null && level !== void 0 ? level : user.level,
+            role: role !== null && role !== void 0 ? role : user.role,
+            status: status !== null && status !== void 0 ? status : user.status,
             subLevel: subLevel !== null && subLevel !== void 0 ? subLevel : user.subLevel,
             isAdmin: isAdmin !== null && isAdmin !== void 0 ? isAdmin : user.isAdmin,
         },
@@ -193,6 +218,8 @@ const getUsers = (0, express_async_handler_1.default)((req, res) => __awaiter(vo
                 level: true,
                 subLevel: true,
                 isAdmin: true,
+                role: true,
+                status: true,
             },
         });
         res.json(users);

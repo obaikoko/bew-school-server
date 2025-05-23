@@ -7,6 +7,7 @@ const studentController_1 = require("../controllers/studentController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
+router.route('/').get(authMiddleware_1.protect, studentController_1.getAllStudents);
 router.route('/register').post(authMiddleware_1.protect, authMiddleware_1.admin, studentController_1.registerStudent);
-// router.route('/auth').post(authStudent);
+router.route('/auth').post(studentController_1.authStudent);
 exports.default = router;
