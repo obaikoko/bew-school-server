@@ -214,4 +214,94 @@ const registerStudent = asyncHandler(
   }
 );
 
-export { authStudent, registerStudent };
+// GET ALL STUDENTS
+// @route GET api/students
+// @access Private (ADMIN or restricted by level/subLevel)
+const getAllStudents = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Unauthorized User');
+    }
+
+    const levelQuery = req.query.level as string;
+    const keyword = req.query.keyword as string | undefined;
+    const page = parseInt(req.query.pageNumber as string) || 1;
+    const pageSize = 30;
+
+    // Build where clause
+    const whereClause: any = {
+      AND: [],
+    };
+
+    // Keyword filter
+    if (keyword) {
+      whereClause.AND.push({
+        OR: [
+          { firstName: { contains: keyword, mode: 'insensitive' } },
+          { lastName: { contains: keyword, mode: 'insensitive' } },
+          { otherName: { contains: keyword, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    // Level filter
+    if (levelQuery && levelQuery !== 'All') {
+      whereClause.AND.push({
+        level: { contains: levelQuery, mode: 'insensitive' },
+      });
+    }
+
+    // Non-admin restriction
+    if (!req.user.isAdmin) {
+      whereClause.AND.push({
+        level: req.user.level,
+        subLevel: req.user.subLevel,
+      });
+    }
+
+    // Remove AND if empty
+    if (whereClause.AND.length === 0) {
+      delete whereClause.AND;
+    }
+
+    const totalCount = await prisma.students.count({
+      where: whereClause,
+    });
+
+    const students = await prisma.students.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      skip: pageSize * (page - 1),
+      take: pageSize,
+      select: {
+        id: true,
+        studentId: true,
+        firstName: true,
+        lastName: true,
+        otherName: true,
+        gender: true,
+        level: true,
+        subLevel: true,
+        yearAdmitted: true,
+        stateOfOrigin: true,
+        localGvt: true,
+        imageUrl: true,
+        createdAt: true,
+      },
+    });
+
+    if (!students || students.length === 0) {
+      res.status(404);
+      throw new Error('No student records found');
+    }
+
+    res.status(200).json({
+      students,
+      page,
+      totalPages: Math.ceil(totalCount / pageSize),
+    });
+  }
+);
+
+export { authStudent, registerStudent, getAllStudents };
