@@ -14,7 +14,6 @@ dotenv_1.default.config();
 const port = process.env.PORT || 5000;
 const app = (0, express_1.default)();
 const corsOptions = {
-    // origin: ['https://www.bendonaldschools.com', 'https://bendonaldschools.com'],
     origin: 'https://new-school-client.vercel.app',
     // origin: 'http://localhost:3000',
     credentials: true,
