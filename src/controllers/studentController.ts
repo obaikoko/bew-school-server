@@ -200,56 +200,61 @@ const registerStudent = asyncHandler(
   }
 );
 
-// GET /api/students/
-// Admin only
-const getAllStudents = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    if (!req.user?.isAdmin) {
-      res.status(403);
-      throw new Error('Access denied');
-    }
+// @route   GET /api/students
+// @access  Private (Admin or Owner)
+const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as {
+    isAdmin: boolean;
+    level?: string;
+    subLevel?: string;
+  };
+  if (!user) {
+    res.status(401);
+    throw new Error('Unauthorized User');
+  }
 
-    const page = parseInt(req.query.pageNumber as string) || 1;
-    const pageSize = 30;
+  const level = req.query.level as string | undefined;
+  const keyword = req.query.keyword as string | undefined;
+  const page = parseInt(req.query.pageNumber as string) || 1;
+  const pageSize = 30;
 
-    const totalCount = await prisma.students.count();
+  // Prisma filter
+  const whereClause: any = {
+    ...(keyword && {
+      OR: [
+        { firstName: { contains: keyword, mode: 'insensitive' } },
+        { lastName: { contains: keyword, mode: 'insensitive' } },
+        { otherName: { contains: keyword, mode: 'insensitive' } },
+      ],
+    }),
+    ...(level &&
+      level !== 'All' && {
+        level: { contains: level, mode: 'insensitive' },
+      }),
+  };
 
-    const students = await prisma.students.findMany({
+  // If not admin, filter by their level/subLevel
+  if (!user.isAdmin) {
+    whereClause.level = user.level;
+    whereClause.subLevel = user.subLevel;
+  }
+
+  const [students, totalCount] = await Promise.all([
+    prisma.students.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       skip: pageSize * (page - 1),
       take: pageSize,
-      select: {
-        id: true,
-        studentId: true,
-        firstName: true,
-        lastName: true,
-        otherName: true,
-        dateOfBirth: true,
-        level: true,
-        subLevel: true,
-        isStudent: true,
-        isPaid: true,
-        gender: true,
-        yearAdmitted: true,
-        stateOfOrigin: true,
-        localGvt: true,
-        homeTown: true,
-        sponsorEmail: true,
-        sponsorName: true,
-        sponsorPhoneNumber: true,
-        sponsorRelationship: true,
-        imageUrl: true,
-        createdAt: true,
-      },
-    });
+    }),
+    prisma.students.count({ where: whereClause }),
+  ]);
 
-    res.status(200).json({
-      students,
-      page,
-      totalPages: Math.ceil(totalCount / pageSize),
-    });
-  }
-);
+  res.status(200).json({
+    students,
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+  });
+});
 
 // @desc Gets students by keyword or level
 // GET /api/students/search?keyword=...&level=...
