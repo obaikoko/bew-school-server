@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.graduateStudent = exports.exportStudentsPDF = exports.exportStudentsCSV = exports.updateStudent = exports.resetPassword = exports.forgetPassword = exports.deleteStudent = exports.getStudent = exports.getStudentsRegisteredByUser = exports.searchStudents = exports.getAllStudents = exports.registerStudent = exports.authStudent = void 0;
+exports.graduateStudent = exports.exportStudentsPDF = exports.exportStudentsCSV = exports.updateStudent = exports.resetPassword = exports.forgetPassword = exports.deleteStudent = exports.getStudent = exports.getStudentsRegisteredByUser = exports.getAllStudents = exports.registerStudent = exports.authStudent = void 0;
 // src/controllers/studentController.ts
 const json2csv_1 = require("json2csv");
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
@@ -173,37 +173,66 @@ const registerStudent = (0, express_async_handler_1.default)((req, res) => __awa
     }
 }));
 exports.registerStudent = registerStudent;
-// GET /api/students/
-// Admin only
+// @route   GET /api/students
+// @access  Private (Admin or Owner)
 const getAllStudents = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.isAdmin)) {
-        res.status(403);
-        throw new Error('Access denied');
+    const user = req.user;
+    if (!user) {
+        res.status(401);
+        throw new Error('Unauthorized User');
     }
+    const level = req.query.level;
+    const keyword = req.query.keyword;
     const page = parseInt(req.query.pageNumber) || 1;
     const pageSize = 30;
-    const totalCount = yield prisma_1.prisma.students.count();
-    const students = yield prisma_1.prisma.students.findMany({
-        orderBy: { createdAt: 'desc' },
-        skip: pageSize * (page - 1),
-        take: pageSize,
-        select: {
-            id: true,
-            studentId: true,
-            firstName: true,
-            lastName: true,
-            otherName: true,
-            gender: true,
-            level: true,
-            subLevel: true,
-            yearAdmitted: true,
-            stateOfOrigin: true,
-            localGvt: true,
-            imageUrl: true,
-            createdAt: true,
-        },
-    });
+    // Prisma filter
+    const whereClause = Object.assign(Object.assign({}, (keyword && {
+        OR: [
+            { firstName: { contains: keyword, mode: 'insensitive' } },
+            { lastName: { contains: keyword, mode: 'insensitive' } },
+            { otherName: { contains: keyword, mode: 'insensitive' } },
+        ],
+    })), (level &&
+        level !== 'All' && {
+        level: { contains: level, mode: 'insensitive' },
+    }));
+    // If not admin, filter by their level/subLevel
+    if (!user.isAdmin) {
+        whereClause.level = user.level;
+        whereClause.subLevel = user.subLevel;
+    }
+    const [students, totalCount] = yield Promise.all([
+        prisma_1.prisma.students.findMany({
+            select: {
+                id: true,
+                studentId: true,
+                firstName: true,
+                lastName: true,
+                otherName: true,
+                dateOfBirth: true,
+                level: true,
+                subLevel: true,
+                isStudent: true,
+                isPaid: true,
+                gender: true,
+                yearAdmitted: true,
+                stateOfOrigin: true,
+                localGvt: true,
+                homeTown: true,
+                sponsorEmail: true,
+                sponsorName: true,
+                sponsorPhoneNumber: true,
+                sponsorRelationship: true,
+                imageUrl: true,
+                createdAt: true,
+            },
+            where: whereClause,
+            orderBy: { createdAt: 'desc' },
+            skip: pageSize * (page - 1),
+            take: pageSize,
+        }),
+        prisma_1.prisma.students.count({ where: whereClause }),
+    ]);
     res.status(200).json({
         students,
         page,
@@ -211,71 +240,6 @@ const getAllStudents = (0, express_async_handler_1.default)((req, res) => __awai
     });
 }));
 exports.getAllStudents = getAllStudents;
-// @desc Gets students by keyword or level
-// GET /api/students/search?keyword=...&level=...
-// @privacy Private
-const searchStudents = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!req.user) {
-        res.status(401);
-        throw new Error('Unauthorized');
-    }
-    const { keyword, level } = req.query;
-    const page = parseInt(req.query.pageNumber) || 1;
-    const pageSize = 30;
-    const where = {
-        AND: [],
-    };
-    if (keyword) {
-        where.AND.push({
-            OR: [
-                { firstName: { contains: keyword, mode: 'insensitive' } },
-                { lastName: { contains: keyword, mode: 'insensitive' } },
-                { otherName: { contains: keyword, mode: 'insensitive' } },
-            ],
-        });
-    }
-    if (level && level !== 'All') {
-        where.AND.push({
-            level: { contains: level, mode: 'insensitive' },
-        });
-    }
-    if (!req.user.isAdmin) {
-        where.AND.push({
-            level: req.user.level,
-            subLevel: req.user.subLevel,
-        });
-    }
-    if (where.AND.length === 0)
-        delete where.AND;
-    const totalCount = yield prisma_1.prisma.students.count({ where });
-    const students = yield prisma_1.prisma.students.findMany({
-        select: {
-            id: true,
-            studentId: true,
-            firstName: true,
-            lastName: true,
-            otherName: true,
-            gender: true,
-            level: true,
-            subLevel: true,
-            yearAdmitted: true,
-            stateOfOrigin: true,
-            localGvt: true,
-            imageUrl: true,
-            createdAt: true,
-        },
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: pageSize * (page - 1),
-        take: pageSize,
-    });
-    res.status(200).json({
-        students,
-        page,
-        totalPages: Math.ceil(totalCount / pageSize),
-    });
-}));
-exports.searchStudents = searchStudents;
 // GET /api/students/registered-by-me
 const getStudentsRegisteredByUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.user) {
@@ -297,12 +261,20 @@ const getStudentsRegisteredByUser = (0, express_async_handler_1.default)((req, r
             firstName: true,
             lastName: true,
             otherName: true,
-            gender: true,
+            dateOfBirth: true,
             level: true,
             subLevel: true,
+            isStudent: true,
+            isPaid: true,
+            gender: true,
             yearAdmitted: true,
             stateOfOrigin: true,
             localGvt: true,
+            homeTown: true,
+            sponsorEmail: true,
+            sponsorName: true,
+            sponsorPhoneNumber: true,
+            sponsorRelationship: true,
             imageUrl: true,
             createdAt: true,
         },
@@ -372,14 +344,23 @@ const getStudent = (0, express_async_handler_1.default)((req, res) => __awaiter(
             firstName: true,
             lastName: true,
             otherName: true,
-            gender: true,
+            dateOfBirth: true,
             level: true,
             subLevel: true,
+            isStudent: true,
+            isPaid: true,
+            gender: true,
             yearAdmitted: true,
             stateOfOrigin: true,
             localGvt: true,
+            homeTown: true,
+            sponsorEmail: true,
+            sponsorName: true,
+            sponsorPhoneNumber: true,
+            sponsorRelationship: true,
             imageUrl: true,
             createdAt: true,
+            updatedAt: true,
         },
         where: {
             id: req.params.id,
@@ -419,12 +400,20 @@ const updateStudent = (0, express_async_handler_1.default)((req, res) => __await
             firstName: true,
             lastName: true,
             otherName: true,
-            gender: true,
+            dateOfBirth: true,
             level: true,
             subLevel: true,
+            isStudent: true,
+            isPaid: true,
+            gender: true,
             yearAdmitted: true,
             stateOfOrigin: true,
             localGvt: true,
+            homeTown: true,
+            sponsorEmail: true,
+            sponsorName: true,
+            sponsorPhoneNumber: true,
+            sponsorRelationship: true,
             imageUrl: true,
             createdAt: true,
         },
