@@ -241,67 +241,6 @@ const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
 
   const [students, totalCount] = await Promise.all([
     prisma.students.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      skip: pageSize * (page - 1),
-      take: pageSize,
-    }),
-    prisma.students.count({ where: whereClause }),
-  ]);
-
-  res.status(200).json({
-    students,
-    page,
-    totalPages: Math.ceil(totalCount / pageSize),
-  });
-});
-
-// @desc Gets students by keyword or level
-// GET /api/students/search?keyword=...&level=...
-// @privacy Private
-const searchStudents = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    if (!req.user) {
-      res.status(401);
-      throw new Error('Unauthorized');
-    }
-
-    const { keyword, level } = req.query;
-    const page = parseInt(req.query.pageNumber as string) || 1;
-    const pageSize = 30;
-
-    const where: any = {
-      AND: [],
-    };
-
-    if (keyword) {
-      where.AND.push({
-        OR: [
-          { firstName: { contains: keyword, mode: 'insensitive' } },
-          { lastName: { contains: keyword, mode: 'insensitive' } },
-          { otherName: { contains: keyword, mode: 'insensitive' } },
-        ],
-      });
-    }
-
-    if (level && level !== 'All') {
-      where.AND.push({
-        level: { contains: level, mode: 'insensitive' },
-      });
-    }
-
-    if (!req.user.isAdmin) {
-      where.AND.push({
-        level: req.user.level,
-        subLevel: req.user.subLevel,
-      });
-    }
-
-    if (where.AND.length === 0) delete where.AND;
-
-    const totalCount = await prisma.students.count({ where });
-
-    const students = await prisma.students.findMany({
       select: {
         id: true,
         studentId: true,
@@ -325,19 +264,21 @@ const searchStudents = asyncHandler(
         imageUrl: true,
         createdAt: true,
       },
-      where,
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       skip: pageSize * (page - 1),
       take: pageSize,
-    });
+    }),
+    prisma.students.count({ where: whereClause }),
+  ]);
 
-    res.status(200).json({
-      students,
-      page,
-      totalPages: Math.ceil(totalCount / pageSize),
-    });
-  }
-);
+  res.status(200).json({
+    students,
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+  });
+});
+
 // GET /api/students/registered-by-me
 const getStudentsRegisteredByUser = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -791,7 +732,6 @@ export {
   authStudent,
   registerStudent,
   getAllStudents,
-  searchStudents,
   getStudentsRegisteredByUser,
   getStudent,
   deleteStudent,
