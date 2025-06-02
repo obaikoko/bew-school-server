@@ -17,7 +17,7 @@ import express from 'express';
 
 const router = express.Router();
 router.route('/').get(protect, getAllStudents);
-router.route('/export').get(protect, admin, exportStudentsCSV);
+router.route('/export-cvs').get(protect, admin, exportStudentsCSV);
 router.route('/pdf').get(protect, exportStudentsPDF);
 router
   .route('/search/registered-user')
