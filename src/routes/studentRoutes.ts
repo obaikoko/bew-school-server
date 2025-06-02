@@ -10,8 +10,8 @@ import {
   registerStudent,
   updateStudent,
   graduateStudent,
+  resetPassword,
 } from '../controllers/studentController';
-import { resetPassword } from '../controllers/userController';
 import { protect, admin } from '../middleware/authMiddleware';
 import express from 'express';
 

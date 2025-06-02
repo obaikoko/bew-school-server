@@ -134,11 +134,35 @@ const registerStudent = asyncHandler(
       const currentYear = new Date().getFullYear();
       const classCode = classCodeMapping[level];
 
-      const count = await prisma.students.count({
-        where: { level },
+      // Step 1: Try to find the tracker
+      let tracker = await prisma.studentIdTracker.findFirst({
+        where: {
+          year: currentYear,
+          level,
+        },
       });
 
-      const studentId = `BDIS/${currentYear}/${classCode}/${(count + 1)
+      // Step 2: Create or increment
+      if (!tracker) {
+        tracker = await prisma.studentIdTracker.create({
+          data: {
+            year: currentYear,
+            level,
+            lastNumber: 1,
+          },
+        });
+      } else {
+        tracker = await prisma.studentIdTracker.update({
+          where: {
+            id: tracker.id,
+          },
+          data: {
+            lastNumber: tracker.lastNumber + 1,
+          },
+        });
+      }
+
+      const studentId = `BDIS/${currentYear}/${classCode}/${tracker.lastNumber
         .toString()
         .padStart(3, '0')}`;
 
@@ -592,7 +616,7 @@ const forgetPassword = asyncHandler(
       });
 
       // Create reset URL to send in email
-      const resetUrl = `${process.env.PUBLIC_DOMAIN}/reset-password?token=${resetToken}`;
+      const resetUrl = `${process.env.PUBLIC_DOMAIN}/students/reset-password?token=${resetToken}`;
 
       // Send the email
       sendSingleMail({

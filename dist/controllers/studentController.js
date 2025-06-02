@@ -114,10 +114,34 @@ const registerStudent = (0, express_async_handler_1.default)((req, res) => __awa
         // Class level to code mapping
         const currentYear = new Date().getFullYear();
         const classCode = classUtils_1.classCodeMapping[level];
-        const count = yield prisma_1.prisma.students.count({
-            where: { level },
+        // Step 1: Try to find the tracker
+        let tracker = yield prisma_1.prisma.studentIdTracker.findFirst({
+            where: {
+                year: currentYear,
+                level,
+            },
         });
-        const studentId = `BDIS/${currentYear}/${classCode}/${(count + 1)
+        // Step 2: Create or increment
+        if (!tracker) {
+            tracker = yield prisma_1.prisma.studentIdTracker.create({
+                data: {
+                    year: currentYear,
+                    level,
+                    lastNumber: 1,
+                },
+            });
+        }
+        else {
+            tracker = yield prisma_1.prisma.studentIdTracker.update({
+                where: {
+                    id: tracker.id,
+                },
+                data: {
+                    lastNumber: tracker.lastNumber + 1,
+                },
+            });
+        }
+        const studentId = `BDIS/${currentYear}/${classCode}/${tracker.lastNumber
             .toString()
             .padStart(3, '0')}`;
         const hashedPassword = yield bcrypt_1.default.hash(process.env.DEFAULTPASSWORD, 10);
@@ -505,7 +529,7 @@ const forgetPassword = (0, express_async_handler_1.default)((req, res) => __awai
             },
         });
         // Create reset URL to send in email
-        const resetUrl = `${process.env.PUBLIC_DOMAIN}/reset-password?token=${resetToken}`;
+        const resetUrl = `${process.env.PUBLIC_DOMAIN}/students/reset-password?token=${resetToken}`;
         // Send the email
         (0, emailService_1.sendSingleMail)({
             email: student.sponsorEmail,

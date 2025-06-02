@@ -41,7 +41,7 @@ model students {
   homeTown             String
   sponsorName          String?
   sponsorRelationship  String?
-  sponsorPhoneNumber   String?
+  sponsorPhoneNumber   Int?
   sponsorEmail         String?
   imageUrl             String?
   imagePublicId        String?
@@ -56,4 +56,14 @@ model students {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model studentIdTracker {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  year       Int
+  level      String
+  lastNumber Int
+  updatedAt  DateTime @updatedAt
+
+  @@unique([year, level])
 }
