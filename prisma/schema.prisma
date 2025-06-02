@@ -41,7 +41,7 @@ model students {
   homeTown             String
   sponsorName          String?
   sponsorRelationship  String?
-  sponsorPhoneNumber   Int?
+  sponsorPhoneNumber   BigInt?
   sponsorEmail         String?
   imageUrl             String?
   imagePublicId        String?
