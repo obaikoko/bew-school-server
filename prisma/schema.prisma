@@ -38,10 +38,10 @@ model students {
   studentId            String?
   stateOfOrigin        String
   localGvt             String
-  homeTown             String
+  homeTown             String?
   sponsorName          String?
   sponsorRelationship  String?
-  sponsorPhoneNumber   BigInt?
+  sponsorPhoneNumber   String?
   sponsorEmail         String?
   imageUrl             String?
   imagePublicId        String?
@@ -58,6 +58,7 @@ model students {
   updatedAt DateTime @updatedAt
 }
 
+
 model studentIdTracker {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   year       Int
@@ -67,3 +68,6 @@ model studentIdTracker {
 
   @@unique([year, level])
 }
+
+
+
