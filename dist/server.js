@@ -15,8 +15,7 @@ dotenv_1.default.config();
 const port = process.env.PORT || 5000;
 const app = (0, express_1.default)();
 const corsOptions = {
-    // origin: 'https://new-school-client.vercel.app',
-    origin: 'http://localhost:3000',
+    origin: process.env.PUBLIC_DOMAIN,
     credentials: true,
 };
 app.use((0, cors_1.default)(corsOptions));
