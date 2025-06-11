@@ -23,6 +23,7 @@ model users {
   createdAt            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt
   student              students[]
+  result               results[]
 }
 
 model students {
@@ -54,10 +55,10 @@ model students {
   userId String @db.ObjectId
   user   users  @relation(fields: [userId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  results   results[]
 }
-
 
 model studentIdTracker {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -69,5 +70,52 @@ model studentIdTracker {
   @@unique([year, level])
 }
 
+model results {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  studentId       String   @db.ObjectId
+  firstName       String
+  lastName        String
+  otherName       String?
+  image           String?
+  level           String
+  subLevel        String
+  term            String
+  session         String
+  position        String?
+  totalScore      Float?
+  averageScore    Float?
+  numberInClass   Int?
+  teacherRemark   String?
+  principalRemark String?
+  isPaid          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
+  // Relations
+  user    users    @relation(fields: [userId], references: [id])
+  student students @relation(fields: [studentId], references: [id])
 
+  // Embedded Types (JSON fields for arrays of subdocuments)
+  subjectResults      subjectResult[]
+  affectiveAssessment affectiveAssessment[]
+  psychomotor         psychomotor[]
+}
+
+type subjectResult {
+  subject    String
+  testScore  Float  @default(0)
+  examScore  Float  @default(0)
+  totalScore Float  @default(0)
+  grade      String @default("-")
+}
+
+type affectiveAssessment {
+  aCategory String
+  grade     String @default("-")
+}
+
+type psychomotor {
+  pCategory String
+  grade     String @default("-")
+}

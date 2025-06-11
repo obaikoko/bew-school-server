@@ -23,6 +23,17 @@ const protect = asyncHandler(
       ) as DecodedToken;
 
       const user = await prisma.users.findUnique({
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          isAdmin: true,
+          status: true,
+          level: true,
+          subLevel: true,
+          email: true,
+        },
         where: { id: decoded.userId },
       });
 

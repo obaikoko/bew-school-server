@@ -17,6 +17,7 @@ import { sendSingleMail } from '../services/emailService';
 import crypto from 'crypto';
 import { resetPasswordSchema } from '../validators/usersValidators';
 import { classCodeMapping, classProgression } from '../utils/classUtils';
+import { User } from '../schemas/userSchema';
 
 // Authenticate Student
 // @route POST api/student/auth
@@ -227,11 +228,7 @@ const registerStudent = asyncHandler(
 // @route   GET /api/students
 // @access  Private (Admin or Owner)
 const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
-  const user = req.user as {
-    isAdmin: boolean;
-    level?: string;
-    subLevel?: string;
-  };
+  const user: User = req.user;
   if (!user) {
     res.status(401);
     throw new Error('Unauthorized User');
