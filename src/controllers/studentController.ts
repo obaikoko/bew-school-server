@@ -116,12 +116,15 @@ const registerStudent = asyncHandler(
         sponsorEmail,
       } = validatedData;
 
+      const parsedDate = new Date(dateOfBirth);
+
       // Check if student already exists
+
       const existingStudent = await prisma.students.findFirst({
         where: {
           firstName: { equals: firstName, mode: 'insensitive' },
           lastName: { equals: lastName, mode: 'insensitive' },
-          dateOfBirth: { equals: dateOfBirth },
+          dateOfBirth: { equals: parsedDate },
         },
       });
 
