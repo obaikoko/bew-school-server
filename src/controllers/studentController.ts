@@ -284,6 +284,7 @@ const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
         sponsorRelationship: true,
         imageUrl: true,
         createdAt: true,
+        updatedAt: true,
       },
       where: whereClause,
       orderBy: { createdAt: 'desc' },
