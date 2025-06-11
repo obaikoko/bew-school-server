@@ -116,17 +116,16 @@ const registerStudent = asyncHandler(
         sponsorEmail,
       } = validatedData;
 
-      const parsedDate = new Date(dateOfBirth);
-
       // Check if student already exists
 
       const existingStudent = await prisma.students.findFirst({
         where: {
           firstName: { equals: firstName, mode: 'insensitive' },
           lastName: { equals: lastName, mode: 'insensitive' },
-          dateOfBirth: { equals: parsedDate },
+          dateOfBirth: { equals: dateOfBirth },
         },
       });
+      console.log(existingStudent);
 
       if (existingStudent) {
         res.status(400);
@@ -230,79 +229,81 @@ const registerStudent = asyncHandler(
 
 // @route   GET /api/students
 // @access  Private (Admin or Owner)
-const getAllStudents = asyncHandler(async (req: Request, res: Response) => {
-  const user: User = req.user;
-  if (!user) {
-    res.status(401);
-    throw new Error('Unauthorized User');
-  }
+const getAllStudents = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const user: User = req.user;
+    if (!user) {
+      res.status(401);
+      throw new Error('Unauthorized User');
+    }
 
-  const level = req.query.level as string | undefined;
-  const keyword = req.query.keyword as string | undefined;
-  const page = parseInt(req.query.pageNumber as string) || 1;
-  const pageSize = 30;
+    const level = req.query.level as string | undefined;
+    const keyword = req.query.keyword as string | undefined;
+    const page = parseInt(req.query.pageNumber as string) || 1;
+    const pageSize = 30;
 
-  // Prisma filter
-  const whereClause: any = {
-    ...(keyword && {
-      OR: [
-        { firstName: { contains: keyword, mode: 'insensitive' } },
-        { lastName: { contains: keyword, mode: 'insensitive' } },
-        { otherName: { contains: keyword, mode: 'insensitive' } },
-      ],
-    }),
-    ...(level &&
-      level !== 'All' && {
-        level: { contains: level, mode: 'insensitive' },
+    // Prisma filter
+    const whereClause: any = {
+      ...(keyword && {
+        OR: [
+          { firstName: { contains: keyword, mode: 'insensitive' } },
+          { lastName: { contains: keyword, mode: 'insensitive' } },
+          { otherName: { contains: keyword, mode: 'insensitive' } },
+        ],
       }),
-  };
+      ...(level &&
+        level !== 'All' && {
+          level: { contains: level, mode: 'insensitive' },
+        }),
+    };
 
-  // If not admin, filter by their level/subLevel
-  if (!user.isAdmin) {
-    whereClause.level = user.level;
-    whereClause.subLevel = user.subLevel;
+    // If not admin, filter by their level/subLevel
+    if (!user.isAdmin) {
+      whereClause.level = user.level;
+      whereClause.subLevel = user.subLevel;
+    }
+
+    const [students, totalCount] = await Promise.all([
+      prisma.students.findMany({
+        select: {
+          id: true,
+          studentId: true,
+          firstName: true,
+          lastName: true,
+          otherName: true,
+          dateOfBirth: true,
+          level: true,
+          subLevel: true,
+          isStudent: true,
+          isPaid: true,
+          gender: true,
+          yearAdmitted: true,
+          stateOfOrigin: true,
+          localGvt: true,
+          homeTown: true,
+          sponsorEmail: true,
+          sponsorName: true,
+          sponsorPhoneNumber: true,
+          sponsorRelationship: true,
+          imageUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip: pageSize * (page - 1),
+        take: pageSize,
+      }),
+      prisma.students.count({ where: whereClause }),
+    ]);
+
+    res.status(200).json({
+      students,
+      page,
+      totalPages: Math.ceil(totalCount / pageSize),
+    });
   }
-
-  const [students, totalCount] = await Promise.all([
-    prisma.students.findMany({
-      select: {
-        id: true,
-        studentId: true,
-        firstName: true,
-        lastName: true,
-        otherName: true,
-        dateOfBirth: true,
-        level: true,
-        subLevel: true,
-        isStudent: true,
-        isPaid: true,
-        gender: true,
-        yearAdmitted: true,
-        stateOfOrigin: true,
-        localGvt: true,
-        homeTown: true,
-        sponsorEmail: true,
-        sponsorName: true,
-        sponsorPhoneNumber: true,
-        sponsorRelationship: true,
-        imageUrl: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      skip: pageSize * (page - 1),
-      take: pageSize,
-    }),
-    prisma.students.count({ where: whereClause }),
-  ]);
-
-  res.status(200).json({
-    students,
-    page,
-    totalPages: Math.ceil(totalCount / pageSize),
-  });
-});
+);
 
 // GET /api/students/registered-by-me
 const getStudentsRegisteredByUser = asyncHandler(
