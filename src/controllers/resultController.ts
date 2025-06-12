@@ -196,36 +196,46 @@ const getResult = asyncHandler(async (req: Request, res: Response) => {
 
 const getStudentResults = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const studentId = req.params.id as string;
-    const user: User = req.user;
+    try {
+      const studentId = req.params.id as string;
+      const user: User = req.user;
 
-    if (!studentId) {
-      res.status(400);
-      throw new Error('invalid studentId');
-    }
-
-    const results = await prisma.results.findMany({
-      where: {
-        studentId,
-      },
-    });
-
-    if (!results) {
-      res.status(404);
-      throw new Error('Results not found!');
-    }
-
-    // If a student is making the request
-    if (req.student as string) {
-      const isOwner = req.student.id.toString() === studentId.toString();
-
-      if (!isOwner) {
-        res.status(401);
-        throw new Error('Unauthorized Access!');
+      if (!studentId) {
+        res.status(400);
+        throw new Error('invalid studentId');
       }
-    }
 
-    res.status(200).json(results);
+      console.log('Prisma:', prisma);
+      console.log('env:', process.env.NODE_ENV);
+      console.log('req.user:', req.user);
+
+      const results = await prisma.results.findMany({
+        where: {
+          studentId,
+        },
+      });
+
+      if (!results) {
+        res.status(404);
+        throw new Error('Results not found!');
+      }
+
+      // If a student is making the request
+      if (req.student as string) {
+        const isOwner = req.student.id.toString() === studentId.toString();
+
+        if (!isOwner) {
+          res.status(401);
+          throw new Error('Unauthorized Access!');
+        }
+      }
+
+      res.status(200).json(results);
+    } catch (error) {
+      console.log(error)
+      throw error
+    }
+   
   }
 );
 
