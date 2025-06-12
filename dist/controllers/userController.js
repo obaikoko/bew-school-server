@@ -27,7 +27,7 @@ const authUser = (0, express_async_handler_1.default)((req, res) => __awaiter(vo
     try {
         const { email, password } = usersValidators_1.authUserSchema.parse(req.body);
         const user = yield prisma_1.prisma.user.findUnique({
-            where: { email },
+            where: { email: email },
             select: {
                 id: true,
                 email: true,
@@ -134,11 +134,10 @@ exports.registerUser = registerUser;
 // @Route GET /api/users
 // @privacy Private
 const getUserProfile = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         const user = yield prisma_1.prisma.user.findUnique({
             where: {
-                id: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id,
+                id: req.user.id,
             },
             select: {
                 id: true,

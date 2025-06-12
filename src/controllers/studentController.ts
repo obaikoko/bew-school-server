@@ -17,7 +17,6 @@ import { sendSingleMail } from '../services/emailService';
 import crypto from 'crypto';
 import { resetPasswordSchema } from '../validators/usersValidators';
 import { classCodeMapping, classProgression } from '../utils/classUtils';
-import { User } from '../schemas/userSchema';
 
 // Authenticate Student
 // @route POST api/student/auth

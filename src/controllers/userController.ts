@@ -23,7 +23,7 @@ const authUser = asyncHandler(
       const { email, password } = authUserSchema.parse(req.body);
 
       const user = await prisma.user.findUnique({
-        where: { email },
+        where: { email: email },
         select: {
           id: true,
           email: true,
@@ -145,7 +145,7 @@ const getUserProfile = asyncHandler(
     try {
       const user = await prisma.user.findUnique({
         where: {
-          id: req.user?.id,
+          id: req.user!.id,
         },
         select: {
           id: true,
