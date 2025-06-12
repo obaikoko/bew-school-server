@@ -3,7 +3,7 @@ import asyncHandler from 'express-async-handler';
 import { prisma } from '../config/db/prisma';
 import { subjectResults } from '../utils/subjectResults'; // adjust the import path
 import { createResultSchema } from '../validators/resultValidator';
-import { User } from '../schemas/userSchema';
+
 
 // @desc Creates New Result
 // @route POST /results/:id
@@ -14,14 +14,14 @@ const createResult = asyncHandler(
     const { session, term, level } = validateData;
     const id = req.params.id as string;
 
-    const user: User = req.user;
+    const user = req.user;
 
     if (!user) {
       res.status(401);
       throw new Error('Unauthorized User');
     }
 
-    const student = await prisma.students.findUnique({
+    const student = await prisma.student.findUnique({
       where: { id },
     });
 
@@ -30,7 +30,7 @@ const createResult = asyncHandler(
       throw new Error('Student does not exist');
     }
 
-    const resultExist = await prisma.results.findFirst({
+    const resultExist = await prisma.result.findFirst({
       where: {
         studentId: id,
         session,
@@ -65,11 +65,11 @@ const createResult = asyncHandler(
     let result;
 
     if (level === 'Lower Reception' || level === 'Upper Reception') {
-      result = await prisma.results.create({
+      result = await prisma.result.create({
         data: baseData,
       });
     } else {
-      result = await prisma.results.create({
+      result = await prisma.result.create({
         data: {
           ...baseData,
           position: '',
@@ -107,7 +107,7 @@ const createResult = asyncHandler(
 // @privacy Private
 const getResults = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user;
+    const user = req.user;
     if (!user) {
       res.status(401);
       throw new Error('Unauthorized User');
@@ -140,13 +140,13 @@ const getResults = asyncHandler(
     }
 
     const [results, totalCount] = await Promise.all([
-      prisma.results.findMany({
+      prisma.result.findMany({
         where: whereClause,
         orderBy: { createdAt: 'desc' },
         skip: pageSize * (page - 1),
         take: pageSize,
       }),
-      prisma.results.count({
+      prisma.result.count({
         where: whereClause,
       }),
     ]);
@@ -163,7 +163,7 @@ const getResults = asyncHandler(
 // @route GET api/results/:id
 // @privacy Private
 const getResult = asyncHandler(async (req: Request, res: Response) => {
-  const result = await prisma.results.findFirst({
+  const result = await prisma.result.findFirst({
     where: {
       id: req.params.id,
     },
@@ -175,7 +175,7 @@ const getResult = asyncHandler(async (req: Request, res: Response) => {
   }
 
   // If a student is making the request
-  if (req.student as string) {
+  if (req.student) {
     const isOwner = req.student.id.toString() === result.studentId.toString();
 
     if (!isOwner) {
@@ -198,7 +198,7 @@ const getStudentResults = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.params.id as string;
-      const user: User = req.user;
+      const user = req.user;
 
       if (!studentId) {
         res.status(400);
@@ -209,7 +209,7 @@ const getStudentResults = asyncHandler(
       console.log('env:', process.env.NODE_ENV);
       console.log('req.user:', req.user);
 
-      const results = await prisma.results.findMany({
+      const results = await prisma.result.findMany({
         where: {
           studentId,
         },
@@ -221,7 +221,7 @@ const getStudentResults = asyncHandler(
       }
 
       // If a student is making the request
-      if (req.student as string) {
+      if (req.student) {
         const isOwner = req.student.id.toString() === studentId.toString();
 
         if (!isOwner) {
@@ -232,10 +232,9 @@ const getStudentResults = asyncHandler(
 
       res.status(200).json(results);
     } catch (error) {
-      console.log(error)
-      throw error
+      console.log(error);
+      throw error;
     }
-   
   }
 );
 

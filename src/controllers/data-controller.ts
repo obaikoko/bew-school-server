@@ -46,7 +46,7 @@ const studentsData = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('Unauthorized User');
   }
 
-  const allStudents = await prisma.students.findMany();
+  const allStudents = await prisma.student.findMany();
 
   const genderCounts: Record<Gender, number> = { Male: 0, Female: 0 };
   const levelGenderCounts: Record<Level, Record<Gender, number>> = {} as any;

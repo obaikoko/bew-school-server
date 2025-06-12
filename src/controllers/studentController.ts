@@ -29,7 +29,7 @@ const authStudent = asyncHandler(
 
       const { studentId, password } = validatedData;
 
-      const student = await prisma.students.findFirst({
+      const student = await prisma.student.findFirst({
         where: {
           studentId,
         },
@@ -52,7 +52,7 @@ const authStudent = asyncHandler(
         throw new Error('Invalid Email or Password');
       }
 
-      const authenticatedStudent = await prisma.students.findFirst({
+      const authenticatedStudent = await prisma.student.findFirst({
         where: {
           studentId,
         },
@@ -118,14 +118,13 @@ const registerStudent = asyncHandler(
 
       // Check if student already exists
 
-      const existingStudent = await prisma.students.findFirst({
+      const existingStudent = await prisma.student.findFirst({
         where: {
           firstName: { equals: firstName, mode: 'insensitive' },
           lastName: { equals: lastName, mode: 'insensitive' },
           dateOfBirth: { equals: dateOfBirth },
         },
       });
-      console.log(existingStudent);
 
       if (existingStudent) {
         res.status(400);
@@ -174,9 +173,9 @@ const registerStudent = asyncHandler(
         10
       );
 
-      const student = await prisma.students.create({
+      const student = await prisma.student.create({
         data: {
-          userId: req.user?.id,
+          userId: req.user!.id,
           firstName,
           lastName,
           otherName,
@@ -231,7 +230,7 @@ const registerStudent = asyncHandler(
 // @access  Private (Admin or Owner)
 const getAllStudents = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const user: User = req.user;
+    const user = req.user;
     if (!user) {
       res.status(401);
       throw new Error('Unauthorized User');
@@ -264,7 +263,7 @@ const getAllStudents = asyncHandler(
     }
 
     const [students, totalCount] = await Promise.all([
-      prisma.students.findMany({
+      prisma.student.findMany({
         select: {
           id: true,
           studentId: true,
@@ -294,7 +293,7 @@ const getAllStudents = asyncHandler(
         skip: pageSize * (page - 1),
         take: pageSize,
       }),
-      prisma.students.count({ where: whereClause }),
+      prisma.student.count({ where: whereClause }),
     ]);
 
     res.status(200).json({
@@ -318,13 +317,13 @@ const getStudentsRegisteredByUser = asyncHandler(
     const page = parseInt(req.query.pageNumber as string) || 1;
     const pageSize = 30;
 
-    const totalCount = await prisma.students.count({
+    const totalCount = await prisma.student.count({
       where: {
         userId: userId,
       },
     });
 
-    const students = await prisma.students.findMany({
+    const students = await prisma.student.findMany({
       select: {
         id: true,
         studentId: true,
@@ -373,7 +372,7 @@ const exportStudentsCSV = asyncHandler(
       throw new Error('Unauthorized');
     }
 
-    const students = await prisma.students.findMany({
+    const students = await prisma.student.findMany({
       select: {
         studentId: true,
         firstName: true,
@@ -418,7 +417,7 @@ const getStudent = asyncHandler(
       res.status(401);
       throw new Error('Unauthorized User');
     }
-    const student = await prisma.students.findFirst({
+    const student = await prisma.student.findFirst({
       select: {
         id: true,
         studentId: true,
@@ -485,7 +484,7 @@ const updateStudent = asyncHandler(
       throw new Error('Unauthorized User');
     }
 
-    const student = await prisma.students.findFirst({
+    const student = await prisma.student.findFirst({
       where: {
         id: req.params.id,
       },
@@ -496,7 +495,7 @@ const updateStudent = asyncHandler(
       throw new Error('No Student Found!');
     }
 
-    const updateStudent = await prisma.students.update({
+    const updateStudent = await prisma.student.update({
       select: {
         id: true,
         studentId: true,
@@ -557,7 +556,7 @@ const deleteStudent = asyncHandler(
         res.status(401);
         throw new Error('Unauthorized User');
       }
-      const student = await prisma.students.findUnique({
+      const student = await prisma.student.findUnique({
         where: {
           id: req.params.id,
         },
@@ -567,7 +566,7 @@ const deleteStudent = asyncHandler(
         res.status(404);
         throw new Error('Student Not Found!');
       }
-      const deleteStudent = await prisma.students.delete({
+      const deleteStudent = await prisma.student.delete({
         where: {
           id: student.id,
         },
@@ -589,7 +588,7 @@ const forgetPassword = asyncHandler(
     const { studentId } = validateData;
     try {
       // Find user by studentId
-      const student = await prisma.students.findFirst({
+      const student = await prisma.student.findFirst({
         where: {
           studentId,
         },
@@ -609,7 +608,7 @@ const forgetPassword = asyncHandler(
         .digest('hex');
 
       const newDate = new Date(Date.now() + 60 * 60 * 1000);
-      const updateStudent = await prisma.students.update({
+      const updateStudent = await prisma.student.update({
         where: { id: student.id },
         data: {
           resetPasswordToken: hashedToken,
@@ -654,7 +653,7 @@ const resetPassword = asyncHandler(
         .update(token)
         .digest('hex');
 
-      const student = await prisma.students.findFirst({
+      const student = await prisma.student.findFirst({
         where: {
           resetPasswordToken: hashedToken,
           resetPasswordExpires: {
@@ -671,7 +670,7 @@ const resetPassword = asyncHandler(
 
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      await prisma.students.update({
+      await prisma.student.update({
         where: { id: student.id },
         data: {
           password: hashedPassword,
@@ -694,7 +693,7 @@ const resetPassword = asyncHandler(
 );
 
 const exportStudentsPDF = asyncHandler(async (req: Request, res: Response) => {
-  const students = await prisma.students.findMany({
+  const students = await prisma.student.findMany({
     select: {
       studentId: true,
       firstName: true,
@@ -723,7 +722,7 @@ const exportStudentsPDF = asyncHandler(async (req: Request, res: Response) => {
 const graduateStudent = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     // Step 1: Fetch all students
-    const students = await prisma.students.findMany();
+    const students = await prisma.student.findMany();
 
     const unmappedLevels: string[] = [];
     let updatedCount = 0;
@@ -734,7 +733,7 @@ const graduateStudent = asyncHandler(
       const nextLevel = classProgression[currentLevel];
 
       if (nextLevel) {
-        await prisma.students.update({
+        await prisma.student.update({
           where: { id: student.id },
           data: { level: nextLevel },
         });

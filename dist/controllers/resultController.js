@@ -30,14 +30,14 @@ const createResult = (0, express_async_handler_1.default)((req, res) => __awaite
         res.status(401);
         throw new Error('Unauthorized User');
     }
-    const student = yield prisma_1.prisma.students.findUnique({
+    const student = yield prisma_1.prisma.student.findUnique({
         where: { id },
     });
     if (!student) {
         res.status(400);
         throw new Error('Student does not exist');
     }
-    const resultExist = yield prisma_1.prisma.results.findFirst({
+    const resultExist = yield prisma_1.prisma.result.findFirst({
         where: {
             studentId: id,
             session,
@@ -67,12 +67,12 @@ const createResult = (0, express_async_handler_1.default)((req, res) => __awaite
     };
     let result;
     if (level === 'Lower Reception' || level === 'Upper Reception') {
-        result = yield prisma_1.prisma.results.create({
+        result = yield prisma_1.prisma.result.create({
             data: baseData,
         });
     }
     else {
-        result = yield prisma_1.prisma.results.create({
+        result = yield prisma_1.prisma.result.create({
             data: Object.assign(Object.assign({}, baseData), { position: '', totalScore: 0, averageScore: 0, affectiveAssessment: [
                     { aCategory: 'Attendance', grade: '-' },
                     { aCategory: 'Carefulness', grade: '-' },
@@ -126,13 +126,13 @@ const getResults = (0, express_async_handler_1.default)((req, res) => __awaiter(
         whereClause.subLevel = user.subLevel;
     }
     const [results, totalCount] = yield Promise.all([
-        prisma_1.prisma.results.findMany({
+        prisma_1.prisma.result.findMany({
             where: whereClause,
             orderBy: { createdAt: 'desc' },
             skip: pageSize * (page - 1),
             take: pageSize,
         }),
-        prisma_1.prisma.results.count({
+        prisma_1.prisma.result.count({
             where: whereClause,
         }),
     ]);
@@ -147,7 +147,7 @@ exports.getResults = getResults;
 // @route GET api/results/:id
 // @privacy Private
 const getResult = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.prisma.results.findFirst({
+    const result = yield prisma_1.prisma.result.findFirst({
         where: {
             id: req.params.id,
         },
@@ -184,7 +184,7 @@ const getStudentResults = (0, express_async_handler_1.default)((req, res) => __a
         console.log('Prisma:', prisma_1.prisma);
         console.log('env:', process.env.NODE_ENV);
         console.log('req.user:', req.user);
-        const results = yield prisma_1.prisma.results.findMany({
+        const results = yield prisma_1.prisma.result.findMany({
             where: {
                 studentId,
             },

@@ -33,7 +33,7 @@ const authStudent = (0, express_async_handler_1.default)((req, res) => __awaiter
     try {
         const validatedData = studentValidators_1.authStudentSchema.parse(req.body);
         const { studentId, password } = validatedData;
-        const student = yield prisma_1.prisma.students.findFirst({
+        const student = yield prisma_1.prisma.student.findFirst({
             where: {
                 studentId,
             },
@@ -54,7 +54,7 @@ const authStudent = (0, express_async_handler_1.default)((req, res) => __awaiter
             res.status(401);
             throw new Error('Invalid Email or Password');
         }
-        const authenticatedStudent = yield prisma_1.prisma.students.findFirst({
+        const authenticatedStudent = yield prisma_1.prisma.student.findFirst({
             where: {
                 studentId,
             },
@@ -95,19 +95,17 @@ exports.authStudent = authStudent;
 // @route POST api/students/
 // @privacy Private ADMIN
 const registerStudent = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         const validatedData = studentValidators_1.insertStudentSchema.parse(req.body);
         const { firstName, lastName, otherName, dateOfBirth, level, subLevel, gender, yearAdmitted, stateOfOrigin, localGvt, homeTown, sponsorName, sponsorRelationship, sponsorPhoneNumber, sponsorEmail, } = validatedData;
         // Check if student already exists
-        const existingStudent = yield prisma_1.prisma.students.findFirst({
+        const existingStudent = yield prisma_1.prisma.student.findFirst({
             where: {
                 firstName: { equals: firstName, mode: 'insensitive' },
                 lastName: { equals: lastName, mode: 'insensitive' },
                 dateOfBirth: { equals: dateOfBirth },
             },
         });
-        console.log(existingStudent);
         if (existingStudent) {
             res.status(400);
             throw new Error('Student already exists');
@@ -146,9 +144,9 @@ const registerStudent = (0, express_async_handler_1.default)((req, res) => __awa
             .toString()
             .padStart(3, '0')}`;
         const hashedPassword = yield bcrypt_1.default.hash(process.env.DEFAULTPASSWORD, 10);
-        const student = yield prisma_1.prisma.students.create({
+        const student = yield prisma_1.prisma.student.create({
             data: {
-                userId: (_a = req.user) === null || _a === void 0 ? void 0 : _a.id,
+                userId: req.user.id,
                 firstName,
                 lastName,
                 otherName,
@@ -227,7 +225,7 @@ const getAllStudents = (0, express_async_handler_1.default)((req, res) => __awai
         whereClause.subLevel = user.subLevel;
     }
     const [students, totalCount] = yield Promise.all([
-        prisma_1.prisma.students.findMany({
+        prisma_1.prisma.student.findMany({
             select: {
                 id: true,
                 studentId: true,
@@ -257,7 +255,7 @@ const getAllStudents = (0, express_async_handler_1.default)((req, res) => __awai
             skip: pageSize * (page - 1),
             take: pageSize,
         }),
-        prisma_1.prisma.students.count({ where: whereClause }),
+        prisma_1.prisma.student.count({ where: whereClause }),
     ]);
     res.status(200).json({
         students,
@@ -275,12 +273,12 @@ const getStudentsRegisteredByUser = (0, express_async_handler_1.default)((req, r
     const userId = req.user.id;
     const page = parseInt(req.query.pageNumber) || 1;
     const pageSize = 30;
-    const totalCount = yield prisma_1.prisma.students.count({
+    const totalCount = yield prisma_1.prisma.student.count({
         where: {
             userId: userId,
         },
     });
-    const students = yield prisma_1.prisma.students.findMany({
+    const students = yield prisma_1.prisma.student.findMany({
         select: {
             id: true,
             studentId: true,
@@ -324,7 +322,7 @@ const exportStudentsCSV = (0, express_async_handler_1.default)((req, res) => __a
         res.status(401);
         throw new Error('Unauthorized');
     }
-    const students = yield prisma_1.prisma.students.findMany({
+    const students = yield prisma_1.prisma.student.findMany({
         select: {
             studentId: true,
             firstName: true,
@@ -363,7 +361,7 @@ const getStudent = (0, express_async_handler_1.default)((req, res) => __awaiter(
         res.status(401);
         throw new Error('Unauthorized User');
     }
-    const student = yield prisma_1.prisma.students.findFirst({
+    const student = yield prisma_1.prisma.student.findFirst({
         select: {
             id: true,
             studentId: true,
@@ -410,7 +408,7 @@ const updateStudent = (0, express_async_handler_1.default)((req, res) => __await
         res.status(401);
         throw new Error('Unauthorized User');
     }
-    const student = yield prisma_1.prisma.students.findFirst({
+    const student = yield prisma_1.prisma.student.findFirst({
         where: {
             id: req.params.id,
         },
@@ -419,7 +417,7 @@ const updateStudent = (0, express_async_handler_1.default)((req, res) => __await
         res.status(404);
         throw new Error('No Student Found!');
     }
-    const updateStudent = yield prisma_1.prisma.students.update({
+    const updateStudent = yield prisma_1.prisma.student.update({
         select: {
             id: true,
             studentId: true,
@@ -477,7 +475,7 @@ const deleteStudent = (0, express_async_handler_1.default)((req, res) => __await
             res.status(401);
             throw new Error('Unauthorized User');
         }
-        const student = yield prisma_1.prisma.students.findUnique({
+        const student = yield prisma_1.prisma.student.findUnique({
             where: {
                 id: req.params.id,
             },
@@ -486,7 +484,7 @@ const deleteStudent = (0, express_async_handler_1.default)((req, res) => __await
             res.status(404);
             throw new Error('Student Not Found!');
         }
-        const deleteStudent = yield prisma_1.prisma.students.delete({
+        const deleteStudent = yield prisma_1.prisma.student.delete({
             where: {
                 id: student.id,
             },
@@ -506,7 +504,7 @@ const forgetPassword = (0, express_async_handler_1.default)((req, res) => __awai
     const { studentId } = validateData;
     try {
         // Find user by studentId
-        const student = yield prisma_1.prisma.students.findFirst({
+        const student = yield prisma_1.prisma.student.findFirst({
             where: {
                 studentId,
             },
@@ -523,7 +521,7 @@ const forgetPassword = (0, express_async_handler_1.default)((req, res) => __awai
             .update(resetToken)
             .digest('hex');
         const newDate = new Date(Date.now() + 60 * 60 * 1000);
-        const updateStudent = yield prisma_1.prisma.students.update({
+        const updateStudent = yield prisma_1.prisma.student.update({
             where: { id: student.id },
             data: {
                 resetPasswordToken: hashedToken,
@@ -561,7 +559,7 @@ const resetPassword = (0, express_async_handler_1.default)((req, res) => __await
             .createHash('sha256')
             .update(token)
             .digest('hex');
-        const student = yield prisma_1.prisma.students.findFirst({
+        const student = yield prisma_1.prisma.student.findFirst({
             where: {
                 resetPasswordToken: hashedToken,
                 resetPasswordExpires: {
@@ -575,7 +573,7 @@ const resetPassword = (0, express_async_handler_1.default)((req, res) => __await
             return;
         }
         const hashedPassword = yield bcrypt_1.default.hash(password, 12);
-        yield prisma_1.prisma.students.update({
+        yield prisma_1.prisma.student.update({
             where: { id: student.id },
             data: {
                 password: hashedPassword,
@@ -596,7 +594,7 @@ const resetPassword = (0, express_async_handler_1.default)((req, res) => __await
 }));
 exports.resetPassword = resetPassword;
 const exportStudentsPDF = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const students = yield prisma_1.prisma.students.findMany({
+    const students = yield prisma_1.prisma.student.findMany({
         select: {
             studentId: true,
             firstName: true,
@@ -618,7 +616,7 @@ const exportStudentsPDF = (0, express_async_handler_1.default)((req, res) => __a
 exports.exportStudentsPDF = exportStudentsPDF;
 const graduateStudent = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // Step 1: Fetch all students
-    const students = yield prisma_1.prisma.students.findMany();
+    const students = yield prisma_1.prisma.student.findMany();
     const unmappedLevels = [];
     let updatedCount = 0;
     // Step 2: Loop through and update each student
@@ -626,7 +624,7 @@ const graduateStudent = (0, express_async_handler_1.default)((req, res) => __awa
         const currentLevel = student.level;
         const nextLevel = classUtils_1.classProgression[currentLevel];
         if (nextLevel) {
-            yield prisma_1.prisma.students.update({
+            yield prisma_1.prisma.student.update({
                 where: { id: student.id },
                 data: { level: nextLevel },
             });

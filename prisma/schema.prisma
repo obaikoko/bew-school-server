@@ -7,26 +7,26 @@ datasource db {
   url      = env("MONGO_URI")
 }
 
-model users {
-  id                   String     @id @default(auto()) @map("_id") @db.ObjectId
-  email                String     @unique
+model User {
+  id                   String    @id @default(auto()) @map("_id") @db.ObjectId
+  email                String    @unique
   firstName            String
   lastName             String
-  role                 String     @default("teacher")
-  status               String     @default("active")
+  role                 String    @default("teacher")
+  status               String    @default("active")
   level                String?
   subLevel             String?
   password             String
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
-  isAdmin              Boolean    @default(false)
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
-  student              students[]
-  result               results[]
+  isAdmin              Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  student              Student[]
+  result               Result[]
 }
 
-model students {
+model Student {
   id                   String    @id @default(auto()) @map("_id") @db.ObjectId
   firstName            String
   lastName             String
@@ -53,14 +53,14 @@ model students {
   resetPasswordExpires DateTime?
 
   userId String @db.ObjectId
-  user   users  @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  results   results[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  results   Result[]
 }
 
-model studentIdTracker {
+model StudentIdTracker {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   year       Int
   level      String
@@ -70,7 +70,7 @@ model studentIdTracker {
   @@unique([year, level])
 }
 
-model results {
+model Result {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   userId          String   @db.ObjectId
   studentId       String   @db.ObjectId
@@ -93,8 +93,8 @@ model results {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  user    users    @relation(fields: [userId], references: [id])
-  student students @relation(fields: [studentId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
   // Embedded Types (JSON fields for arrays of subdocuments)
   subjectResults      subjectResult[]
