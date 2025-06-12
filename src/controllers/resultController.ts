@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
-import { prisma } from '../config/db/prisma'; // adjust the import path
+import { prisma } from '../config/db/prisma';
 import { subjectResults } from '../utils/subjectResults'; // adjust the import path
 import { createResultSchema } from '../validators/resultValidator';
 import { User } from '../schemas/userSchema';
@@ -194,37 +194,39 @@ const getResult = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json(result);
 });
 
-const getStudentResults = asyncHandler(async (req: Request, res: Response) => {
-  const studentId = req.params.id as string;
-  const user: User = req.user;
+const getStudentResults = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const studentId = req.params.id as string;
+    const user: User = req.user;
 
-  if (!studentId) {
-    res.status(400);
-    throw new Error('invalid studentId');
-  }
-
-  const results = await prisma.results.findMany({
-    where: {
-      studentId,
-    },
-  });
-
-  if (!results) {
-    res.status(404);
-    throw new Error('Results not found!');
-  }
-
-  // If a student is making the request
-  if (req.student as string) {
-    const isOwner = req.student.id.toString() === studentId.toString();
-
-    if (!isOwner) {
-      res.status(401);
-      throw new Error('Unauthorized Access!');
+    if (!studentId) {
+      res.status(400);
+      throw new Error('invalid studentId');
     }
-  }
 
-  res.status(200).json(results);
-});
+    const results = await prisma.results.findMany({
+      where: {
+        studentId,
+      },
+    });
+
+    if (!results) {
+      res.status(404);
+      throw new Error('Results not found!');
+    }
+
+    // If a student is making the request
+    if (req.student as string) {
+      const isOwner = req.student.id.toString() === studentId.toString();
+
+      if (!isOwner) {
+        res.status(401);
+        throw new Error('Unauthorized Access!');
+      }
+    }
+
+    res.status(200).json(results);
+  }
+);
 
 export { createResult, getResult, getResults, getStudentResults };
