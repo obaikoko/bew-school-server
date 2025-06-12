@@ -116,7 +116,6 @@ const registerStudent = asyncHandler(
       } = validatedData;
 
       // Check if student already exists
-
       const existingStudent = await prisma.student.findFirst({
         where: {
           firstName: { equals: firstName, mode: 'insensitive' },

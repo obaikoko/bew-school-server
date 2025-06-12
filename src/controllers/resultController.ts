@@ -4,7 +4,6 @@ import { prisma } from '../config/db/prisma';
 import { subjectResults } from '../utils/subjectResults'; // adjust the import path
 import { createResultSchema } from '../validators/resultValidator';
 
-
 // @desc Creates New Result
 // @route POST /results/:id
 // privacy PRIVATE Users
@@ -204,10 +203,6 @@ const getStudentResults = asyncHandler(
         res.status(400);
         throw new Error('invalid studentId');
       }
-
-      console.log('Prisma:', prisma);
-      console.log('env:', process.env.NODE_ENV);
-      console.log('req.user:', req.user);
 
       const results = await prisma.result.findMany({
         where: {

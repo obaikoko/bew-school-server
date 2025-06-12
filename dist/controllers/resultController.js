@@ -181,9 +181,6 @@ const getStudentResults = (0, express_async_handler_1.default)((req, res) => __a
             res.status(400);
             throw new Error('invalid studentId');
         }
-        console.log('Prisma:', prisma_1.prisma);
-        console.log('env:', process.env.NODE_ENV);
-        console.log('req.user:', req.user);
         const results = yield prisma_1.prisma.result.findMany({
             where: {
                 studentId,
