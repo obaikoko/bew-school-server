@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
-const prisma_1 = require("../config/db/prisma"); // adjust the import path
+const prisma_1 = require("../config/db/prisma");
 const subjectResults_1 = require("../utils/subjectResults"); // adjust the import path
 const resultValidator_1 = require("../validators/resultValidator");
 // @desc Creates New Result
@@ -174,29 +174,38 @@ const getResult = (0, express_async_handler_1.default)((req, res) => __awaiter(v
 }));
 exports.getResult = getResult;
 const getStudentResults = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const studentId = req.params.id;
-    const user = req.user;
-    if (!studentId) {
-        res.status(400);
-        throw new Error('invalid studentId');
-    }
-    const results = yield prisma_1.prisma.results.findMany({
-        where: {
-            studentId,
-        },
-    });
-    if (!results) {
-        res.status(404);
-        throw new Error('Results not found!');
-    }
-    // If a student is making the request
-    if (req.student) {
-        const isOwner = req.student.id.toString() === studentId.toString();
-        if (!isOwner) {
-            res.status(401);
-            throw new Error('Unauthorized Access!');
+    try {
+        const studentId = req.params.id;
+        const user = req.user;
+        if (!studentId) {
+            res.status(400);
+            throw new Error('invalid studentId');
         }
+        console.log('Prisma:', prisma_1.prisma);
+        console.log('env:', process.env.NODE_ENV);
+        console.log('req.user:', req.user);
+        const results = yield prisma_1.prisma.results.findMany({
+            where: {
+                studentId,
+            },
+        });
+        if (!results) {
+            res.status(404);
+            throw new Error('Results not found!');
+        }
+        // If a student is making the request
+        if (req.student) {
+            const isOwner = req.student.id.toString() === studentId.toString();
+            if (!isOwner) {
+                res.status(401);
+                throw new Error('Unauthorized Access!');
+            }
+        }
+        res.status(200).json(results);
     }
-    res.status(200).json(results);
+    catch (error) {
+        console.log(error);
+        throw error;
+    }
 }));
 exports.getStudentResults = getStudentResults;

@@ -107,6 +107,7 @@ const registerStudent = (0, express_async_handler_1.default)((req, res) => __awa
                 dateOfBirth: { equals: dateOfBirth },
             },
         });
+        console.log(existingStudent);
         if (existingStudent) {
             res.status(400);
             throw new Error('Student already exists');
@@ -249,6 +250,7 @@ const getAllStudents = (0, express_async_handler_1.default)((req, res) => __awai
                 sponsorRelationship: true,
                 imageUrl: true,
                 createdAt: true,
+                updatedAt: true,
             },
             where: whereClause,
             orderBy: { createdAt: 'desc' },
