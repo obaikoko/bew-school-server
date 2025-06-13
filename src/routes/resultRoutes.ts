@@ -5,11 +5,16 @@ import {
   getResult,
   getResults,
   getStudentResults,
+  deleteResult,
 } from '../controllers/resultController';
 
 const router = express.Router();
 router.route('/').get(protect, getResults);
-router.route('/:id').post(protect, createResult).get(protect, getResult);
+router
+  .route('/:id')
+  .post(protect, createResult)
+  .get(protect, getResult)
+  .delete(protect, deleteResult);
 router.route('/student/:id').get(protect, getStudentResults);
 
 export default router;

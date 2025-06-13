@@ -8,6 +8,10 @@ const authMiddleware_1 = require("../middleware/authMiddleware");
 const resultController_1 = require("../controllers/resultController");
 const router = express_1.default.Router();
 router.route('/').get(authMiddleware_1.protect, resultController_1.getResults);
-router.route('/:id').post(authMiddleware_1.protect, resultController_1.createResult).get(authMiddleware_1.protect, resultController_1.getResult);
+router
+    .route('/:id')
+    .post(authMiddleware_1.protect, resultController_1.createResult)
+    .get(authMiddleware_1.protect, resultController_1.getResult)
+    .delete(authMiddleware_1.protect, resultController_1.deleteResult);
 router.route('/student/:id').get(authMiddleware_1.protect, resultController_1.getStudentResults);
 exports.default = router;

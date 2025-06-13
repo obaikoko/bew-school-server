@@ -233,4 +233,27 @@ const getStudentResults = asyncHandler(
   }
 );
 
-export { createResult, getResult, getResults, getStudentResults };
+const deleteResult = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const result = await prisma.result.findFirst({
+      where: {
+        id: req.params.id,
+      },
+    });
+
+    if (!result) {
+      res.status(404);
+      throw new Error('Result not found!');
+    }
+
+    await prisma.result.delete({
+      where: {
+        id: result.id,
+      },
+    });
+
+    res.status(200).json({ message: 'Result Deleted successfully' });
+  }
+);
+
+export { createResult, getResult, getResults, getStudentResults, deleteResult };
