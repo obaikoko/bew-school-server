@@ -12,11 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
+exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const subjectResults_1 = require("../utils/subjectResults"); // adjust the import path
 const resultValidator_1 = require("../validators/resultValidator");
+const resultValidator_2 = require("../validators/resultValidator");
+const getGrade_1 = __importDefault(require("../utils/getGrade"));
 // @desc Creates New Result
 // @route POST /results/:id
 // privacy PRIVATE Users
@@ -206,6 +208,87 @@ const getStudentResults = (0, express_async_handler_1.default)((req, res) => __a
     }
 }));
 exports.getStudentResults = getStudentResults;
+const updateResult = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Unauthorized User');
+    }
+    const validatedData = resultValidator_2.updateResultSchema.parse(req.body);
+    const { subject, test, exam, grade, affectiveAssessments, psychomotorAssessments, teacherRemark, principalRemark, } = validatedData;
+    const testScore = Number(test);
+    const examScore = Number(exam);
+    const result = yield prisma_1.prisma.result.findUnique({
+        where: { id: req.params.id },
+    });
+    if (!result) {
+        res.status(404);
+        throw new Error('Result not found');
+    }
+    // if (
+    //   result.level !== req.user.level ||
+    //   result.subLevel !== req.user.subLevel
+    // ) {
+    //   res.status(401);
+    //   throw new Error(
+    //     'Unable to update this result, Please contact the class teacher'
+    //   );
+    // }
+    // --- Update subjectResults array ---
+    let updatedSubjectResults = result.subjectResults;
+    if (subject) {
+        const index = updatedSubjectResults.findIndex((s) => s.subject === subject);
+        if (index === -1) {
+            res.status(404);
+            throw new Error('Subject not found in results');
+        }
+        const subjectToUpdate = updatedSubjectResults[index];
+        if (result.level === 'Lower Reception' ||
+            result.level === 'Upper Reception') {
+            subjectToUpdate.grade = grade || subjectToUpdate.grade;
+        }
+        else {
+            subjectToUpdate.testScore = testScore || subjectToUpdate.testScore;
+            subjectToUpdate.examScore = examScore || subjectToUpdate.examScore;
+            subjectToUpdate.totalScore =
+                subjectToUpdate.testScore + subjectToUpdate.examScore;
+            subjectToUpdate.grade = (0, getGrade_1.default)(subjectToUpdate.totalScore);
+        }
+        updatedSubjectResults[index] = subjectToUpdate;
+    }
+    // --- Update affectiveAssessment array ---
+    let updatedAffective = result.affectiveAssessment;
+    if (affectiveAssessments === null || affectiveAssessments === void 0 ? void 0 : affectiveAssessments.length) {
+        updatedAffective = updatedAffective.map((a) => {
+            const incoming = affectiveAssessments.find((x) => x.aCategory === a.aCategory);
+            return incoming ? Object.assign(Object.assign({}, a), { grade: incoming.grade }) : a;
+        });
+    }
+    // --- Update psychomotor array ---
+    let updatedPsychomotor = result.psychomotor;
+    if (psychomotorAssessments === null || psychomotorAssessments === void 0 ? void 0 : psychomotorAssessments.length) {
+        updatedPsychomotor = updatedPsychomotor.map((p) => {
+            const incoming = psychomotorAssessments.find((x) => x.pCategory === p.pCategory);
+            return incoming ? Object.assign(Object.assign({}, p), { grade: incoming.grade }) : p;
+        });
+    }
+    // --- Recalculate total and average ---
+    const totalScore = updatedSubjectResults.reduce((acc, s) => acc + s.totalScore, 0);
+    const averageScore = totalScore / updatedSubjectResults.length;
+    const updatedResult = yield prisma_1.prisma.result.update({
+        where: { id: result.id },
+        data: {
+            subjectResults: updatedSubjectResults,
+            affectiveAssessment: updatedAffective,
+            psychomotor: updatedPsychomotor,
+            totalScore,
+            averageScore,
+            teacherRemark: teacherRemark || result.teacherRemark,
+            principalRemark: principalRemark || result.principalRemark,
+        },
+    });
+    res.status(200).json(updatedResult);
+}));
+exports.updateResult = updateResult;
 const deleteResult = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.prisma.result.findFirst({
         where: {

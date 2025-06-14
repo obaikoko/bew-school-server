@@ -3,6 +3,8 @@ import asyncHandler from 'express-async-handler';
 import { prisma } from '../config/db/prisma';
 import { subjectResults } from '../utils/subjectResults'; // adjust the import path
 import { createResultSchema } from '../validators/resultValidator';
+import { updateResultSchema } from '../validators/resultValidator';
+import getGrade from '../utils/getGrade';
 
 // @desc Creates New Result
 // @route POST /results/:id
@@ -233,6 +235,124 @@ const getStudentResults = asyncHandler(
   }
 );
 
+const updateResult = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Unauthorized User');
+    }
+
+    const validatedData = updateResultSchema.parse(req.body);
+    const {
+      subject,
+      test,
+      exam,
+      grade,
+      affectiveAssessments,
+      psychomotorAssessments,
+      teacherRemark,
+      principalRemark,
+    } = validatedData;
+
+    const testScore = Number(test);
+    const examScore = Number(exam);
+
+    const result = await prisma.result.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!result) {
+      res.status(404);
+      throw new Error('Result not found');
+    }
+
+    // if (
+    //   result.level !== req.user.level ||
+    //   result.subLevel !== req.user.subLevel
+    // ) {
+    //   res.status(401);
+    //   throw new Error(
+    //     'Unable to update this result, Please contact the class teacher'
+    //   );
+    // }
+
+    // --- Update subjectResults array ---
+    let updatedSubjectResults = result.subjectResults;
+
+    if (subject) {
+      const index = updatedSubjectResults.findIndex(
+        (s) => s.subject === subject
+      );
+
+      if (index === -1) {
+        res.status(404);
+        throw new Error('Subject not found in results');
+      }
+
+      const subjectToUpdate = updatedSubjectResults[index];
+
+      if (
+        result.level === 'Lower Reception' ||
+        result.level === 'Upper Reception'
+      ) {
+        subjectToUpdate.grade = grade || subjectToUpdate.grade;
+      } else {
+        subjectToUpdate.testScore = testScore || subjectToUpdate.testScore;
+        subjectToUpdate.examScore = examScore || subjectToUpdate.examScore;
+        subjectToUpdate.totalScore =
+          subjectToUpdate.testScore + subjectToUpdate.examScore;
+        subjectToUpdate.grade = getGrade(subjectToUpdate.totalScore);
+      }
+
+      updatedSubjectResults[index] = subjectToUpdate;
+    }
+
+    // --- Update affectiveAssessment array ---
+    let updatedAffective = result.affectiveAssessment;
+    if (affectiveAssessments?.length) {
+      updatedAffective = updatedAffective.map((a) => {
+        const incoming = affectiveAssessments.find(
+          (x) => x.aCategory === a.aCategory
+        );
+        return incoming ? { ...a, grade: incoming.grade } : a;
+      });
+    }
+
+    // --- Update psychomotor array ---
+    let updatedPsychomotor = result.psychomotor;
+    if (psychomotorAssessments?.length) {
+      updatedPsychomotor = updatedPsychomotor.map((p) => {
+        const incoming = psychomotorAssessments.find(
+          (x) => x.pCategory === p.pCategory
+        );
+        return incoming ? { ...p, grade: incoming.grade } : p;
+      });
+    }
+
+    // --- Recalculate total and average ---
+    const totalScore = updatedSubjectResults.reduce(
+      (acc, s) => acc + s.totalScore,
+      0
+    );
+    const averageScore = totalScore / updatedSubjectResults.length;
+
+    const updatedResult = await prisma.result.update({
+      where: { id: result.id },
+      data: {
+        subjectResults: updatedSubjectResults,
+        affectiveAssessment: updatedAffective,
+        psychomotor: updatedPsychomotor,
+        totalScore,
+        averageScore,
+        teacherRemark: teacherRemark || result.teacherRemark,
+        principalRemark: principalRemark || result.principalRemark,
+      },
+    });
+
+    res.status(200).json(updatedResult);
+  }
+);
+
 const deleteResult = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const result = await prisma.result.findFirst({
@@ -256,4 +376,11 @@ const deleteResult = asyncHandler(
   }
 );
 
-export { createResult, getResult, getResults, getStudentResults, deleteResult };
+export {
+  createResult,
+  getResult,
+  getResults,
+  getStudentResults,
+  updateResult,
+  deleteResult,
+};

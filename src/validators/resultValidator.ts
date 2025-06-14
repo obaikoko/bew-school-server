@@ -5,3 +5,31 @@ export const createResultSchema = z.object({
   level: z.string().min(3, 'level cannot be less than 3 characters'),
   term: z.string().min(3, 'term cannot be less than 3 characters'),
 });
+
+export const updateResultSchema = z.object({
+  subject: z.string().optional(),
+  test: z.coerce.number().max(30, 'test score cannot be more than 30'),
+  exam: z.coerce.number().max(70, 'exam score cannot be more than 30'),
+  grade: z.string().optional(),
+
+  affectiveAssessments: z
+    .array(
+      z.object({
+        aCategory: z.string(),
+        grade: z.string(),
+      })
+    )
+    .optional(),
+
+  psychomotorAssessments: z
+    .array(
+      z.object({
+        pCategory: z.string(),
+        grade: z.string(),
+      })
+    )
+    .optional(),
+
+  teacherRemark: z.string().optional(),
+  principalRemark: z.string().optional(),
+});

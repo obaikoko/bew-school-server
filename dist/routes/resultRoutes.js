@@ -12,6 +12,7 @@ router
     .route('/:id')
     .post(authMiddleware_1.protect, resultController_1.createResult)
     .get(authMiddleware_1.protect, resultController_1.getResult)
+    .put(authMiddleware_1.protect, resultController_1.updateResult)
     .delete(authMiddleware_1.protect, resultController_1.deleteResult);
 router.route('/student/:id').get(authMiddleware_1.protect, resultController_1.getStudentResults);
 exports.default = router;
