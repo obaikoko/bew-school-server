@@ -215,8 +215,8 @@ const updateResult = (0, express_async_handler_1.default)((req, res) => __awaite
     }
     const validatedData = resultValidator_2.updateResultSchema.parse(req.body);
     const { subject, test, exam, grade, affectiveAssessments, psychomotorAssessments, teacherRemark, principalRemark, } = validatedData;
-    const testScore = Number(test);
-    const examScore = Number(exam);
+    // const testScore = Number(test);
+    // const examScore = Number(exam);
     const result = yield prisma_1.prisma.result.findUnique({
         where: { id: req.params.id },
     });
@@ -247,8 +247,8 @@ const updateResult = (0, express_async_handler_1.default)((req, res) => __awaite
             subjectToUpdate.grade = grade || subjectToUpdate.grade;
         }
         else {
-            subjectToUpdate.testScore = testScore || subjectToUpdate.testScore;
-            subjectToUpdate.examScore = examScore || subjectToUpdate.examScore;
+            subjectToUpdate.testScore = test || subjectToUpdate.testScore;
+            subjectToUpdate.examScore = exam || subjectToUpdate.examScore;
             subjectToUpdate.totalScore =
                 subjectToUpdate.testScore + subjectToUpdate.examScore;
             subjectToUpdate.grade = (0, getGrade_1.default)(subjectToUpdate.totalScore);

@@ -254,8 +254,8 @@ const updateResult = asyncHandler(
       principalRemark,
     } = validatedData;
 
-    const testScore = Number(test);
-    const examScore = Number(exam);
+    // const testScore = Number(test);
+    // const examScore = Number(exam);
 
     const result = await prisma.result.findUnique({
       where: { id: req.params.id },
@@ -297,8 +297,8 @@ const updateResult = asyncHandler(
       ) {
         subjectToUpdate.grade = grade || subjectToUpdate.grade;
       } else {
-        subjectToUpdate.testScore = testScore || subjectToUpdate.testScore;
-        subjectToUpdate.examScore = examScore || subjectToUpdate.examScore;
+        subjectToUpdate.testScore = test || subjectToUpdate.testScore;
+        subjectToUpdate.examScore = exam || subjectToUpdate.examScore;
         subjectToUpdate.totalScore =
           subjectToUpdate.testScore + subjectToUpdate.examScore;
         subjectToUpdate.grade = getGrade(subjectToUpdate.totalScore);

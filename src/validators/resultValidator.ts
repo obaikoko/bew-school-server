@@ -9,12 +9,12 @@ export const createResultSchema = z.object({
 export const updateResultSchema = z.object({
   subject: z.string().optional(),
   test: z.coerce
-    .string()
+    .number()
     .max(30, 'test score cannot be more than 30')
     .optional()
     .nullable(),
   exam: z.coerce
-    .string()
+    .number()
     .max(70, 'exam score cannot be more than 30')
     .optional()
     .nullable(),

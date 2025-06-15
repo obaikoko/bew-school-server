@@ -9,8 +9,16 @@ exports.createResultSchema = zod_1.z.object({
 });
 exports.updateResultSchema = zod_1.z.object({
     subject: zod_1.z.string().optional(),
-    test: zod_1.z.coerce.number().max(30, 'test score cannot be more than 30'),
-    exam: zod_1.z.coerce.number().max(70, 'exam score cannot be more than 30'),
+    test: zod_1.z.coerce
+        .number()
+        .max(30, 'test score cannot be more than 30')
+        .optional()
+        .nullable(),
+    exam: zod_1.z.coerce
+        .number()
+        .max(70, 'exam score cannot be more than 30')
+        .optional()
+        .nullable(),
     grade: zod_1.z.string().optional(),
     affectiveAssessments: zod_1.z
         .array(zod_1.z.object({
