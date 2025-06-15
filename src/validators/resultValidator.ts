@@ -8,8 +8,8 @@ export const createResultSchema = z.object({
 
 export const updateResultSchema = z.object({
   subject: z.string().optional(),
-  test: z.coerce.number().max(30, 'test score cannot be more than 30'),
-  exam: z.coerce.number().max(70, 'exam score cannot be more than 30'),
+  test: z.coerce.string().max(30, 'test score cannot be more than 30'),
+  exam: z.coerce.string().max(70, 'exam score cannot be more than 30'),
   grade: z.string().optional(),
 
   affectiveAssessments: z
