@@ -11,11 +11,13 @@ export const updateResultSchema = z.object({
   test: z.coerce
     .string()
     .max(30, 'test score cannot be more than 30')
-    .optional(),
+    .optional()
+    .nullable(),
   exam: z.coerce
     .string()
     .max(70, 'exam score cannot be more than 30')
-    .optional(),
+    .optional()
+    .nullable(),
   grade: z.string().optional(),
 
   affectiveAssessments: z
