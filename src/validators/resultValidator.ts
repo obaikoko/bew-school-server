@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { boolean, z } from 'zod';
 
 export const createResultSchema = z.object({
   session: z.string().min(3, 'session cannot be less than 3 characters'),
@@ -40,4 +40,22 @@ export const updateResultSchema = z.object({
 
   teacherRemark: z.string().optional(),
   principalRemark: z.string().optional(),
+});
+
+export const updateResultPaymentSchema = z.object({
+  resultId: z.string().min(5, 'ResultID should be at least 5 characters'),
+  resultFee: boolean(),
+});
+
+export const generatePositionsSchema = z.object({
+  level: z.string().min(3, 'level should be at least 3 characters'),
+  subLevel: z.string().min(3, 'sub level should be at least 3 characters'),
+  session: z.string().min(3, 'level should be at least 3 characters'),
+  term: z.string().min(3, 'level should be at least 3 characters'),
+});
+export const subjectResultSchema = z.object({
+  level: z.string().min(3, 'level should be at least 3 characters'),
+  subjectName: z.string().min(3, 'subject should be at least 3 characters'),
+  session: z.string().min(3, 'level should be at least 3 characters'),
+  term: z.string().min(3, 'level should be at least 3 characters'),
 });

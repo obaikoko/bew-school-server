@@ -12,13 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
+exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const subjectResults_1 = require("../utils/subjectResults"); // adjust the import path
 const resultValidator_1 = require("../validators/resultValidator");
-const resultValidator_2 = require("../validators/resultValidator");
 const getGrade_1 = __importDefault(require("../utils/getGrade"));
+const getOrdinalSuffix_1 = __importDefault(require("../utils/getOrdinalSuffix"));
 // @desc Creates New Result
 // @route POST /results/:id
 // privacy PRIVATE Users
@@ -213,10 +213,8 @@ const updateResult = (0, express_async_handler_1.default)((req, res) => __awaite
         res.status(401);
         throw new Error('Unauthorized User');
     }
-    const validatedData = resultValidator_2.updateResultSchema.parse(req.body);
+    const validatedData = resultValidator_1.updateResultSchema.parse(req.body);
     const { subject, test, exam, grade, affectiveAssessments, psychomotorAssessments, teacherRemark, principalRemark, } = validatedData;
-    // const testScore = Number(test);
-    // const examScore = Number(exam);
     const result = yield prisma_1.prisma.result.findUnique({
         where: { id: req.params.id },
     });
@@ -224,15 +222,11 @@ const updateResult = (0, express_async_handler_1.default)((req, res) => __awaite
         res.status(404);
         throw new Error('Result not found');
     }
-    // if (
-    //   result.level !== req.user.level ||
-    //   result.subLevel !== req.user.subLevel
-    // ) {
-    //   res.status(401);
-    //   throw new Error(
-    //     'Unable to update this result, Please contact the class teacher'
-    //   );
-    // }
+    if (result.level !== req.user.level ||
+        result.subLevel !== req.user.subLevel) {
+        res.status(401);
+        throw new Error('Unable to update this result, Please contact the class teacher');
+    }
     // --- Update subjectResults array ---
     let updatedSubjectResults = result.subjectResults;
     if (subject) {
@@ -307,3 +301,191 @@ const deleteResult = (0, express_async_handler_1.default)((req, res) => __awaite
     res.status(200).json({ message: 'Result Deleted successfully' });
 }));
 exports.deleteResult = deleteResult;
+// @desc updates result to paid and makes it visible to student
+// @privacy private
+const updateResultPayment = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const validateData = resultValidator_1.updateResultPaymentSchema.parse(req.body);
+        const { resultId, resultFee } = validateData;
+        const result = yield prisma_1.prisma.result.findFirst({
+            where: {
+                id: resultId,
+            },
+        });
+        if (!result) {
+            res.status(404);
+            throw new Error('Result not found!');
+        }
+        yield prisma_1.prisma.result.update({
+            where: {
+                id: result.id,
+            },
+            data: {
+                isPaid: resultFee,
+            },
+        });
+        res.status(200);
+        res.json('Payment status updated successfully');
+    }
+    catch (error) {
+        throw error;
+    }
+}));
+exports.updateResultPayment = updateResultPayment;
+const generatePositions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Unauthorized User');
+    }
+    const validatedData = resultValidator_1.generatePositionsSchema.parse(req.body);
+    const { level, subLevel, session, term } = validatedData;
+    // Fetch all results for the specified class
+    const results = yield prisma_1.prisma.result.findMany({
+        where: {
+            level,
+            subLevel,
+            session,
+            term,
+        },
+    });
+    if (!results || results.length === 0) {
+        res.status(404);
+        throw new Error(`No results found for ${level}${subLevel} ${session} session`);
+    }
+    // Sort results by averageScore in descending order
+    const sortedResults = results.sort((a, b) => {
+        var _a, _b;
+        const aAvg = (_a = a.averageScore) !== null && _a !== void 0 ? _a : 0;
+        const bAvg = (_b = b.averageScore) !== null && _b !== void 0 ? _b : 0;
+        return bAvg - aAvg;
+    });
+    // Assign positions
+    const updatedResults = sortedResults.map((result, index) => ({
+        id: result.id,
+        position: `${index + 1}${(0, getOrdinalSuffix_1.default)(index + 1)}`,
+        numberInClass: results.length,
+    }));
+    // Batch update using Prisma's `updateMany` alternative: multiple update calls
+    yield Promise.all(updatedResults.map(({ id, position, numberInClass }) => prisma_1.prisma.result.update({
+        where: { id },
+        data: {
+            position,
+            numberInClass,
+        },
+    })));
+    res.status(200).json({
+        message: `${level}${subLevel} ${session} Results Ranked Successfully`,
+    });
+}));
+exports.generatePositions = generatePositions;
+const generateBroadsheet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const validatedData = resultValidator_1.generatePositionsSchema.parse(req.body);
+    const { level, subLevel, session, term } = validatedData;
+    // Fetch results filtered by class criteria
+    const results = yield prisma_1.prisma.result.findMany({
+        where: {
+            session,
+            term,
+            level,
+            subLevel,
+        },
+        include: {
+            student: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                },
+            },
+        },
+    });
+    if (!results || results.length === 0) {
+        res.status(404);
+        throw new Error(`No results found for ${level}${subLevel} ${session} session`);
+    }
+    // Transform to broadsheet format
+    const broadsheet = results.map((result) => {
+        var _a, _b;
+        return ({
+            studentId: result.studentId,
+            firstName: ((_a = result.student) === null || _a === void 0 ? void 0 : _a.firstName) || 'N/A',
+            lastName: ((_b = result.student) === null || _b === void 0 ? void 0 : _b.lastName) || 'N/A',
+            subjectResults: result.subjectResults.map((subject) => ({
+                subject: subject.subject,
+                testScore: subject.testScore,
+                examScore: subject.examScore,
+            })),
+        });
+    });
+    res.status(200).json(broadsheet);
+}));
+exports.generateBroadsheet = generateBroadsheet;
+const addSubjectToResults = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const validateData = resultValidator_1.subjectResultSchema.parse(req.body);
+    const { session, term, level, subjectName } = validateData;
+    const newSubject = {
+        subject: subjectName,
+        testScore: 0,
+        examScore: 0,
+        totalScore: 0,
+        grade: '-',
+    };
+    const results = yield prisma_1.prisma.result.findMany({
+        where: { session, term, level },
+    });
+    if (!results.length) {
+        res.status(404);
+        throw new Error('No results found.');
+    }
+    const updatedResults = yield Promise.all(results.map((result) => __awaiter(void 0, void 0, void 0, function* () {
+        const exists = result.subjectResults.some((s) => s.subject.toLowerCase() === subjectName.toLowerCase());
+        if (!exists) {
+            const updatedSubjects = [...result.subjectResults, newSubject];
+            const totalScore = updatedSubjects.reduce((acc, s) => acc + (s.totalScore || 0), 0);
+            const averageScore = updatedSubjects.length > 0
+                ? totalScore / updatedSubjects.length
+                : 0;
+            return prisma_1.prisma.result.update({
+                where: { id: result.id },
+                data: {
+                    subjectResults: updatedSubjects,
+                    totalScore,
+                    averageScore,
+                },
+            });
+        }
+        return result;
+    })));
+    res.json({
+        message: `${subjectName} added to ${updatedResults.length} result(s) for ${level} - ${term} term.`,
+    });
+}));
+exports.addSubjectToResults = addSubjectToResults;
+const manualSubjectRemoval = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const validateData = resultValidator_1.subjectResultSchema.parse(req.body);
+    const { session, term, level, subjectName } = validateData;
+    const results = yield prisma_1.prisma.result.findMany({
+        where: { session, term, level },
+    });
+    if (!results.length) {
+        res.status(404);
+        throw new Error('No results found.');
+    }
+    const updatedResults = yield Promise.all(results.map((result) => __awaiter(void 0, void 0, void 0, function* () {
+        const updatedSubjects = result.subjectResults.filter((s) => s.subject !== subjectName);
+        const totalScore = updatedSubjects.reduce((acc, s) => acc + (s.totalScore || 0), 0);
+        const averageScore = updatedSubjects.length > 0 ? totalScore / updatedSubjects.length : 0;
+        return prisma_1.prisma.result.update({
+            where: { id: result.id },
+            data: {
+                subjectResults: updatedSubjects,
+                totalScore,
+                averageScore,
+            },
+        });
+    })));
+    res
+        .status(200)
+        .json(`${subjectName} removed from ${updatedResults.length} result(s) successfully.`);
+}));
+exports.manualSubjectRemoval = manualSubjectRemoval;
