@@ -70,6 +70,17 @@ model StudentIdTracker {
   @@unique([year, level])
 }
 
+model NextTerm {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  reOpeningDate DateTime
+  level         String
+  term          String
+  session       String
+  busFee        Float?
+  nextTermFee   Float
+  otherCharges Float?
+}
+
 model Result {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   userId          String   @db.ObjectId

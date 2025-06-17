@@ -1,4 +1,4 @@
-import { User, Student, Result } from '@prisma/client'; // or from your model types
+import { User, Student, Result, NextTerm } from '@prisma/client'; // or from your model types
 
 declare global {
   namespace Express {
@@ -6,6 +6,7 @@ declare global {
       user?: User;
       student?: Student;
       result?: Result;
+      nextTerm?: NextTerm;
     }
   }
 }

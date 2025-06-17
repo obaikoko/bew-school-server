@@ -41,7 +41,7 @@ exports.updateResultPaymentSchema = zod_1.z.object({
 });
 exports.generatePositionsSchema = zod_1.z.object({
     level: zod_1.z.string().min(3, 'level should be at least 3 characters'),
-    subLevel: zod_1.z.string().min(3, 'sub level should be at least 3 characters'),
+    subLevel: zod_1.z.string().min(1, 'sub level should be at least 1 character'),
     session: zod_1.z.string().min(3, 'level should be at least 3 characters'),
     term: zod_1.z.string().min(3, 'level should be at least 3 characters'),
 });
