@@ -12,13 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
+exports.exportResult = exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const subjectResults_1 = require("../utils/subjectResults"); // adjust the import path
 const resultValidator_1 = require("../validators/resultValidator");
 const getGrade_1 = __importDefault(require("../utils/getGrade"));
 const getOrdinalSuffix_1 = __importDefault(require("../utils/getOrdinalSuffix"));
+const generateStudentResult_1 = require("../utils/generateStudentResult");
+const generateStudentPdf_1 = require("../utils/generateStudentPdf");
 // @desc Creates New Result
 // @route POST /results/:id
 // privacy PRIVATE Users
@@ -489,3 +491,24 @@ const manualSubjectRemoval = (0, express_async_handler_1.default)((req, res) => 
         .json(`${subjectName} removed from ${updatedResults.length} result(s) successfully.`);
 }));
 exports.manualSubjectRemoval = manualSubjectRemoval;
+const exportResult = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.prisma.result.findFirst({
+        where: {
+            id: req.params.id,
+        },
+    });
+    if (!result) {
+        res.status(404);
+        throw new Error('Not found');
+    }
+    // const html = generateStudentHTML(students);
+    const html = (0, generateStudentResult_1.generateStudentResultHTML)(result);
+    const pdfBuffer = yield (0, generateStudentPdf_1.generateStudentPdf)(html);
+    const fileName = `students-report-${new Date().toISOString().split('T')[0]}.pdf`;
+    res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
+    res.send(pdfBuffer);
+}));
+exports.exportResult = exportResult;

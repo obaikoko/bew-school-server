@@ -21,5 +21,6 @@ router
     .put(authMiddleware_1.protect, resultController_1.updateResult)
     .delete(authMiddleware_1.protect, resultController_1.deleteResult);
 router.route('/student/:id').get(authMiddleware_1.protect, resultController_1.getStudentResults);
+router.route('/pdf/:id').get(resultController_1.exportResult);
 router.route('/').get(authMiddleware_1.protect, resultController_1.getResults);
 exports.default = router;

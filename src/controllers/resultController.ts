@@ -10,8 +10,10 @@ import {
   updateResultSchema,
 } from '../validators/resultValidator';
 import getGrade from '../utils/getGrade';
-import { UpdateResultPayment } from '../schemas/resultSchema';
+import { StudentResult, UpdateResultPayment } from '../schemas/resultSchema';
 import getOrdinalSuffix from '../utils/getOrdinalSuffix';
+import { generateStudentResultHTML } from '../utils/generateStudentResult';
+import { generateStudentPdf } from '../utils/generateStudentPdf';
 
 // @desc Creates New Result
 // @route POST /results/:id
@@ -624,6 +626,33 @@ const manualSubjectRemoval = asyncHandler(
   }
 );
 
+const exportResult = asyncHandler(async (req: Request, res: Response) => {
+  const result = await prisma.result.findFirst({
+    where: {
+      id: req.params.id,
+    },
+  });
+  if (!result) {
+    res.status(404);
+    throw new Error('Not found');
+  }
+
+  // const html = generateStudentHTML(students);
+  const html = generateStudentResultHTML(result);
+  const pdfBuffer = await generateStudentPdf(html);
+
+  const fileName = `students-report-${
+    new Date().toISOString().split('T')[0]
+  }.pdf`;
+
+  res.set({
+    'Content-Type': 'application/pdf',
+    'Content-Disposition': `attachment; filename="${fileName}"`,
+  });
+
+  res.send(pdfBuffer);
+});
+
 export {
   createResult,
   getResult,
@@ -636,4 +665,5 @@ export {
   generateBroadsheet,
   addSubjectToResults,
   manualSubjectRemoval,
+  exportResult,
 };

@@ -12,6 +12,7 @@ import {
   generateBroadsheet,
   addSubjectToResults,
   manualSubjectRemoval,
+  exportResult,
 } from '../controllers/resultController';
 
 const router = express.Router();
@@ -29,6 +30,7 @@ router
   .put(protect, updateResult)
   .delete(protect, deleteResult);
 router.route('/student/:id').get(protect, getStudentResults);
+router.route('/pdf/:id').get(exportResult);
 
 router.route('/').get(protect, getResults);
 
