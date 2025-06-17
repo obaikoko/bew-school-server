@@ -625,6 +625,26 @@ const manualSubjectRemoval = asyncHandler(
       );
   }
 );
+const resultData = asyncHandler(async (req: Request, res: Response) => {
+  const [results, totalResults, resultsWithPosition] = await Promise.all([
+    prisma.result.findMany(),
+    prisma.result.count(),
+    prisma.result.count({
+      where: {
+        position: {
+          not: null ,
+        },
+      },
+    }),
+  ]);
+
+  res.status(200).json({
+    results,
+    totalResults,
+    resultsWithPosition,
+    resultWithoutPosition: totalResults - resultsWithPosition,
+  });
+});
 
 const exportResult = asyncHandler(async (req: Request, res: Response) => {
   const result = await prisma.result.findFirst({
@@ -665,5 +685,6 @@ export {
   generateBroadsheet,
   addSubjectToResults,
   manualSubjectRemoval,
+  resultData,
   exportResult,
 };

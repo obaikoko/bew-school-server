@@ -14,6 +14,7 @@ router
     .route('/subjects')
     .put(authMiddleware_1.protect, resultController_1.manualSubjectRemoval)
     .post(authMiddleware_1.protect, resultController_1.addSubjectToResults);
+router.route('/data').get(authMiddleware_1.protect, resultController_1.resultData);
 router
     .route('/:id')
     .post(authMiddleware_1.protect, resultController_1.createResult)

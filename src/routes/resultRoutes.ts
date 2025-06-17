@@ -13,6 +13,7 @@ import {
   addSubjectToResults,
   manualSubjectRemoval,
   exportResult,
+  resultData,
 } from '../controllers/resultController';
 
 const router = express.Router();
@@ -23,6 +24,7 @@ router
   .route('/subjects')
   .put(protect, manualSubjectRemoval)
   .post(protect, addSubjectToResults);
+router.route('/data').get(protect, resultData);
 router
   .route('/:id')
   .post(protect, createResult)

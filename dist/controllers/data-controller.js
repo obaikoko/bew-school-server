@@ -14,25 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.studentsData = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
-const prisma_1 = require("../config/db/prisma"); // adjust this path based on where your Prisma client is
-const levels = [
-    'Creche',
-    'Lower Reception',
-    'Upper Reception',
-    'Nursery 1',
-    'Nursery 2',
-    'Grade 1',
-    'Grade 2',
-    'Grade 3',
-    'Grade 4',
-    'Grade 5',
-    'JSS 1',
-    'JSS 2',
-    'JSS 3',
-    'SSS 1',
-    'SSS 2',
-    'SSS 3',
-];
+const prisma_1 = require("../config/db/prisma");
+const classUtils_1 = require("../utils/classUtils");
 const studentsData = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.user) {
         res.status(401);
@@ -42,7 +25,7 @@ const studentsData = (0, express_async_handler_1.default)((req, res) => __awaite
     const genderCounts = { Male: 0, Female: 0 };
     const levelGenderCounts = {};
     // Initialize levelGenderCounts
-    for (const level of levels) {
+    for (const level of classUtils_1.levels) {
         levelGenderCounts[level] = { Male: 0, Female: 0 };
     }
     let paidFees = 0;
@@ -52,7 +35,7 @@ const studentsData = (0, express_async_handler_1.default)((req, res) => __awaite
         if (gender === 'Male' || gender === 'Female') {
             genderCounts[gender]++;
         }
-        if (levels.includes(level)) {
+        if (classUtils_1.levels.includes(level)) {
             levelGenderCounts[level][gender]++;
         }
         if (student.isPaid) {
@@ -66,7 +49,7 @@ const studentsData = (0, express_async_handler_1.default)((req, res) => __awaite
         Female: genderCounts.Female,
     };
     // Append each level/gender count to the response
-    for (const level of levels) {
+    for (const level of classUtils_1.levels) {
         const safeKey = level.replace(/\s+/g, '');
         response[`${safeKey}Males`] = levelGenderCounts[level].Male;
         response[`${safeKey}Females`] = levelGenderCounts[level].Female;
