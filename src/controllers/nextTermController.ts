@@ -69,6 +69,8 @@ const getNextTermInfo = asyncHandler(async (req: Request, res: Response) => {
   const validateData = getNextTermDetailsSchema.parse(req.query);
 
   const { level, session, term } = validateData;
+  console.log(Object.keys(prisma)); 
+
 
   const nextTermInfo = await prisma.nextTerm.findFirst({
     where: {
