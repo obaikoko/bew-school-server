@@ -208,6 +208,7 @@ const getStudentResults = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const studentId = req.params.id as string;
+      const user = req.user;
 
       if (!studentId) {
         res.status(400);
