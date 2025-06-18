@@ -1,17 +1,55 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { prisma } from '../config/db/prisma';
-import { registerStaffSchema, staffSchema } from '../validators/staffValidators';
+import {
+  registerStaffSchema,
+  staffSchema,
+} from '../validators/staffValidators';
 
- const registerStaff = asyncHandler(
-  async (req: Request, res: Response) => {
-    const validateData = registerStaffSchema.parse(req.body);
+const registerStaff = asyncHandler(async (req: Request, res: Response) => {
+  const validateData = registerStaffSchema.parse(req.body);
 
-    const {
+  const {
+    firstName,
+    lastName,
+    otherName,
+    dateOfBirth,
+    qualification,
+    category,
+    role,
+    gender,
+    maritalStatus,
+    yearAdmitted,
+    stateOfOrigin,
+    localGvt,
+    homeTown,
+    residence,
+    phone,
+    email,
+    imageUrl,
+    imagePublicId,
+  } = validateData;
+
+  console.log('Models:', Object.keys(prisma));
+
+  const staffExist = await prisma.staff.findFirst({
+    where: {
+      firstName: { equals: firstName, mode: 'insensitive' },
+      lastName: { equals: lastName, mode: 'insensitive' },
+    },
+  });
+
+  if (staffExist) {
+    res.status(400);
+    throw new Error('Staff already exists');
+  }
+
+  const staff = await prisma.staff.create({
+    data: {
       firstName,
       lastName,
       otherName,
-      dateOfBirth,
+      dateOfBirth: new Date(dateOfBirth),
       qualification,
       category,
       role,
@@ -26,50 +64,13 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
       email,
       imageUrl,
       imagePublicId,
-    } = validateData;
+    },
+  });
 
-    console.log('Models:', Object.keys(prisma));
+  res.status(201).json(staff);
+});
 
-    const staffExist = await prisma.staff.findFirst({
-      where: {
-        firstName: { equals: firstName, mode: 'insensitive' },
-        lastName: { equals: lastName, mode: 'insensitive' },
-      },
-    });
-
-    if (staffExist) {
-      res.status(400);
-      throw new Error('Staff already exists');
-    }
-
-    const staff = await prisma.staff.create({
-      data: {
-        firstName,
-        lastName,
-        otherName,
-        dateOfBirth: new Date(dateOfBirth),
-        qualification,
-        category,
-        role,
-        gender,
-        maritalStatus,
-        yearAdmitted,
-        stateOfOrigin,
-        localGvt,
-        homeTown,
-        residence,
-        phone,
-        email,
-        imageUrl,
-        imagePublicId,
-      },
-    });
-
-    res.status(201).json(staff);
-  }
-);
-
- const getAllStaff = asyncHandler(async (req: Request, res: Response) => {
+const getAllStaff = asyncHandler(async (req: Request, res: Response) => {
   const pageSize = 20;
   const page = Number(req.query.pageNumber) || 1;
   const keyword = (req.query.keyword as string)?.trim() || '';
@@ -104,8 +105,7 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
   });
 });
 
-
- const getStaff = asyncHandler(async (req: Request, res: Response) => {
+const getStaff = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
@@ -127,8 +127,7 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
   }
 });
 
-
- const updateStaff = asyncHandler(async (req: Request, res: Response) => {
+const updateStaff = asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
   const parsed = staffSchema.partial().safeParse(req.body);
   if (!parsed.success) {
@@ -142,26 +141,26 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
     throw new Error('Staff not found');
   }
 
-//   let imageData = {};
-//   if (parsed.data.image) {
-//     if (staff.imagePublicId) {
-//       await cloudinary.uploader.destroy(staff.imagePublicId);
-//     }
-//     const uploaded = await cloudinary.uploader.upload(parsed.data.image, {
-//       folder: 'Bendonalds',
-//     });
+  //   let imageData = {};
+  //   if (parsed.data.image) {
+  //     if (staff.imagePublicId) {
+  //       await cloudinary.uploader.destroy(staff.imagePublicId);
+  //     }
+  //     const uploaded = await cloudinary.uploader.upload(parsed.data.image, {
+  //       folder: 'Bendonalds',
+  //     });
 
-//     imageData = {
-//       imageUrl: uploaded.secure_url,
-//       imagePublicId: uploaded.public_id,
-//     };
-//   }
+  //     imageData = {
+  //       imageUrl: uploaded.secure_url,
+  //       imagePublicId: uploaded.public_id,
+  //     };
+  //   }
 
   const updated = await prisma.staff.update({
     where: { id },
     data: {
       ...parsed.data,
-    //   ...imageData,
+      //   ...imageData,
       dateOfBirth: parsed.data.dateOfBirth
         ? new Date(parsed.data.dateOfBirth)
         : undefined,
@@ -171,8 +170,7 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
   res.status(200).json(updated);
 });
 
-
- const deleteStaff = asyncHandler(async (req: Request, res: Response) => {
+const deleteStaff = asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id;
 
   const staff = await prisma.staff.findUnique({ where: { id } });
@@ -181,17 +179,16 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
     throw new Error('Staff not found');
   }
 
-//   if (staff.imagePublicId) {
-//     await cloudinary.uploader.destroy(staff.imagePublicId);
-//   }
+  //   if (staff.imagePublicId) {
+  //     await cloudinary.uploader.destroy(staff.imagePublicId);
+  //   }
 
   await prisma.staff.delete({ where: { id } });
 
   res.status(200).json({ message: 'Staff deleted successfully' });
 });
-  
 
- const staffData = asyncHandler(async (req: Request, res: Response) => {
+const staffData = asyncHandler(async (req: Request, res: Response) => {
   const [total, males, females] = await Promise.all([
     prisma.staff.count(),
     prisma.staff.count({ where: { gender: 'Male' } }),
@@ -205,8 +202,7 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
   });
 });
 
-
- export {
+export {
   registerStaff,
   getAllStaff,
   getStaff,

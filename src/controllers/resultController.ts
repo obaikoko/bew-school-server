@@ -263,7 +263,7 @@ const updateResult = asyncHandler(
       principalRemark,
     } = validatedData;
 
-    const result = await prisma.result.findUnique({
+    const result: StudentResult | null = await prisma.result.findUnique({
       where: { id: req.params.id },
     });
 
@@ -428,7 +428,7 @@ const generatePositions = asyncHandler(
     const { level, subLevel, session, term } = validatedData;
 
     // Fetch all results for the specified class
-    const results = await prisma.result.findMany({
+    const results: StudentResult[] = await prisma.result.findMany({
       where: {
         level,
         subLevel,
@@ -482,7 +482,7 @@ const generateBroadsheet = asyncHandler(async (req: Request, res: Response) => {
   const { level, subLevel, session, term } = validatedData;
 
   // Fetch results filtered by class criteria
-  const results = await prisma.result.findMany({
+  const results: StudentResult[] = await prisma.result.findMany({
     where: {
       session,
       term,
@@ -510,8 +510,8 @@ const generateBroadsheet = asyncHandler(async (req: Request, res: Response) => {
   // Transform to broadsheet format
   const broadsheet = results.map((result) => ({
     studentId: result.studentId,
-    firstName: result.student?.firstName || 'N/A',
-    lastName: result.student?.lastName || 'N/A',
+    firstName: result.firstName || 'N/A',
+    lastName: result.lastName || 'N/A',
     subjectResults: result.subjectResults.map((subject) => ({
       subject: subject.subject,
       testScore: subject.testScore,
@@ -534,7 +534,7 @@ const addSubjectToResults = asyncHandler(
       grade: '-',
     };
 
-    const results = await prisma.result.findMany({
+    const results: StudentResult[] = await prisma.result.findMany({
       where: { session, term, level },
     });
 
@@ -585,7 +585,7 @@ const manualSubjectRemoval = asyncHandler(
     const validateData = subjectResultSchema.parse(req.body);
     const { session, term, level, subjectName } = validateData;
 
-    const results = await prisma.result.findMany({
+    const results: StudentResult[] = await prisma.result.findMany({
       where: { session, term, level },
     });
 

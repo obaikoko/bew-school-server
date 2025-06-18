@@ -406,19 +406,16 @@ const generateBroadsheet = (0, express_async_handler_1.default)((req, res) => __
         throw new Error(`No results found for ${level}${subLevel} ${session} session`);
     }
     // Transform to broadsheet format
-    const broadsheet = results.map((result) => {
-        var _a, _b;
-        return ({
-            studentId: result.studentId,
-            firstName: ((_a = result.student) === null || _a === void 0 ? void 0 : _a.firstName) || 'N/A',
-            lastName: ((_b = result.student) === null || _b === void 0 ? void 0 : _b.lastName) || 'N/A',
-            subjectResults: result.subjectResults.map((subject) => ({
-                subject: subject.subject,
-                testScore: subject.testScore,
-                examScore: subject.examScore,
-            })),
-        });
-    });
+    const broadsheet = results.map((result) => ({
+        studentId: result.studentId,
+        firstName: result.firstName || 'N/A',
+        lastName: result.lastName || 'N/A',
+        subjectResults: result.subjectResults.map((subject) => ({
+            subject: subject.subject,
+            testScore: subject.testScore,
+            examScore: subject.examScore,
+        })),
+    }));
     res.status(200).json(broadsheet);
 }));
 exports.generateBroadsheet = generateBroadsheet;
