@@ -80,6 +80,8 @@ model NextTerm {
   nextTermFee   Float
   otherCharges Float?
 }
+
+
 model Staff {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   firstName     String
