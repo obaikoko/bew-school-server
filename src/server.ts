@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import userRoute from './routes/userRoutes';
 import studentRoute from './routes/studentRoutes';
+import staffRoute from './routes/staffRoute';
+import admissionRoute from './routes/admissionRoutes';
 import dataRoute from './routes/dataRoutes';
 import resultRoute from './routes/resultRoutes';
 import nextTermRoute from './routes/nextTermRoute';
@@ -26,7 +28,9 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/api/users', userRoute);
 app.use('/api/students', studentRoute);
+app.use('/api/staff', staffRoute);
 app.use('/api/data', dataRoute);
+app.use('/api/admission', admissionRoute);
 app.use('/api/results', resultRoute);
 app.use('/api/nextTerm', nextTermRoute);
 app.use(errorHandler);

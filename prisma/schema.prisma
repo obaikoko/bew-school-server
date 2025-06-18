@@ -80,6 +80,46 @@ model NextTerm {
   nextTermFee   Float
   otherCharges Float?
 }
+model Staff {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  firstName     String
+  lastName      String
+  otherName     String?
+  dateOfBirth   DateTime
+  qualification String?
+  category      String?
+  role          String?
+  gender        String
+  maritalStatus String?
+  yearAdmitted  DateTime?
+  stateOfOrigin String?
+  localGvt      String?
+  homeTown      String?
+  residence     String?
+  phone         String
+  email         String   @unique
+  imageUrl      String?  // URL from Cloudinary
+  imagePublicId String?  // Public ID from Cloudinary
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Admission {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  firstName   String
+  lastName    String
+  email       String
+  phone       String
+  childName   String
+  dateOfBirth DateTime
+  gender      String
+  level       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
+
 
 model Result {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
