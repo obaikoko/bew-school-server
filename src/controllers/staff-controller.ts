@@ -28,6 +28,8 @@ import { registerStaffSchema, staffSchema } from '../validators/staffValidators'
       imagePublicId,
     } = validateData;
 
+    console.log('Models:', Object.keys(prisma));
+
     const staffExist = await prisma.staff.findFirst({
       where: {
         firstName: { equals: firstName, mode: 'insensitive' },
