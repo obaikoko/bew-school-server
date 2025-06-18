@@ -18,6 +18,7 @@ const createAdmission = asyncHandler(async (req: Request, res: Response) => {
     level,
   } = validateData;
 
+  
   const admission = await prisma.admission.create({
     data: {
       firstName,

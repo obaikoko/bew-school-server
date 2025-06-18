@@ -61,4 +61,34 @@ const studentsData = asyncHandler(async (req: Request, res: Response) => {
   res.json(response);
 });
 
-export { studentsData };
+const userData = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const [total, adminUsers, activeUsers, suspendedUsers] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({
+        where: {
+          isAdmin: true,
+        },
+      }),
+      prisma.user.count({
+        where: {
+          status: 'active',
+        },
+      }),
+      prisma.user.count({
+        where: {
+          status: 'suspended',
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      totalUsers: total,
+      adminUsers: adminUsers,
+      activeUsers: activeUsers,
+      suspendedUsers: suspendedUsers,
+    });
+  }
+);
+
+export { studentsData, userData };

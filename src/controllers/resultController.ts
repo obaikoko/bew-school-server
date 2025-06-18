@@ -626,23 +626,27 @@ const manualSubjectRemoval = asyncHandler(
   }
 );
 const resultData = asyncHandler(async (req: Request, res: Response) => {
-  const [results, totalResults, resultsWithPosition] = await Promise.all([
-    prisma.result.findMany(),
-    prisma.result.count(),
-    prisma.result.count({
-      where: {
-        position: {
-          not: null,
+  const [results, totalResults, publishedResults, unpublishedResults] =
+    await Promise.all([
+      prisma.result.findMany(),
+      prisma.result.count(),
+      prisma.result.count({
+        where: {
+          isPublished: true,
         },
-      },
-    }),
-  ]);
+      }),
+      prisma.result.count({
+        where: {
+          isPublished: false,
+        },
+      }),
+    ]);
 
   res.status(200).json({
     results,
     totalResults,
-    resultsWithPosition,
-    resultWithoutPosition: totalResults - resultsWithPosition,
+    publishedResults,
+    unpublishedResults,
   });
 });
 

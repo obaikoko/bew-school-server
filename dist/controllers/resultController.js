@@ -489,22 +489,25 @@ const manualSubjectRemoval = (0, express_async_handler_1.default)((req, res) => 
 }));
 exports.manualSubjectRemoval = manualSubjectRemoval;
 const resultData = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const [results, totalResults, resultsWithPosition] = yield Promise.all([
+    const [results, totalResults, publishedResults, unpublishedResults] = yield Promise.all([
         prisma_1.prisma.result.findMany(),
         prisma_1.prisma.result.count(),
         prisma_1.prisma.result.count({
             where: {
-                position: {
-                    not: null,
-                },
+                isPublished: true,
+            },
+        }),
+        prisma_1.prisma.result.count({
+            where: {
+                isPublished: false,
             },
         }),
     ]);
     res.status(200).json({
         results,
         totalResults,
-        resultsWithPosition,
-        resultWithoutPosition: totalResults - resultsWithPosition,
+        publishedResults,
+        unpublishedResults,
     });
 }));
 exports.resultData = resultData;
