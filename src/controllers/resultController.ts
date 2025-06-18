@@ -632,7 +632,7 @@ const resultData = asyncHandler(async (req: Request, res: Response) => {
     prisma.result.count({
       where: {
         position: {
-          not: null ,
+          not: null,
         },
       },
     }),
