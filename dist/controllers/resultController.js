@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportResult = exports.resultData = exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
+exports.exportManyResults = exports.exportResult = exports.resultData = exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const subjectResults_1 = require("../utils/subjectResults"); // adjust the import path
@@ -521,7 +521,10 @@ const exportResult = (0, express_async_handler_1.default)((req, res) => __awaite
         res.status(404);
         throw new Error('Not found');
     }
-    // const html = generateStudentHTML(students);
+    if (!result.isPublished) {
+        res.status(401);
+        throw new Error('Result is not yet published');
+    }
     const html = (0, generateStudentResult_1.generateStudentResultHTML)(result);
     const pdfBuffer = yield (0, generateStudentPdf_1.generateStudentPdf)(html);
     const fileName = `students-report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -532,3 +535,30 @@ const exportResult = (0, express_async_handler_1.default)((req, res) => __awaite
     res.send(pdfBuffer);
 }));
 exports.exportResult = exportResult;
+const exportManyResults = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // Fetch all published results
+    const results = yield prisma_1.prisma.result.findMany({
+        where: {
+            isPublished: true,
+        },
+        orderBy: {
+            lastName: 'asc', // optional: sort by student name
+        },
+    });
+    if (results.length === 0) {
+        res.status(404);
+        throw new Error('No published results found');
+    }
+    // Generate HTML for all results, separated by page breaks
+    const html = results
+        .map(generateStudentResult_1.generateStudentResultHTML)
+        .join('<div style="page-break-after: always;"></div>');
+    const pdfBuffer = yield (0, generateStudentPdf_1.generateStudentPdf)(html);
+    const fileName = `all-students-results-${new Date().toISOString().split('T')[0]}.pdf`;
+    res.set({
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
+    res.send(pdfBuffer);
+}));
+exports.exportManyResults = exportManyResults;

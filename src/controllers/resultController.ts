@@ -661,11 +661,49 @@ const exportResult = asyncHandler(async (req: Request, res: Response) => {
     throw new Error('Not found');
   }
 
-  // const html = generateStudentHTML(students);
+  if (!result.isPublished) {
+    res.status(401);
+    throw new Error('Result is not yet published');
+  }
+
   const html = generateStudentResultHTML(result);
   const pdfBuffer = await generateStudentPdf(html);
 
   const fileName = `students-report-${
+    new Date().toISOString().split('T')[0]
+  }.pdf`;
+
+  res.set({
+    'Content-Type': 'application/pdf',
+    'Content-Disposition': `attachment; filename="${fileName}"`,
+  });
+
+  res.send(pdfBuffer);
+});
+const exportManyResults = asyncHandler(async (req: Request, res: Response) => {
+  // Fetch all published results
+  const results = await prisma.result.findMany({
+    where: {
+      isPublished: true,
+    },
+    orderBy: {
+      lastName: 'asc', // optional: sort by student name
+    },
+  });
+
+  if (results.length === 0) {
+    res.status(404);
+    throw new Error('No published results found');
+  }
+
+  // Generate HTML for all results, separated by page breaks
+  const html = results
+    .map(generateStudentResultHTML)
+    .join('<div style="page-break-after: always;"></div>');
+
+  const pdfBuffer = await generateStudentPdf(html);
+
+  const fileName = `all-students-results-${
     new Date().toISOString().split('T')[0]
   }.pdf`;
 
@@ -691,4 +729,5 @@ export {
   manualSubjectRemoval,
   resultData,
   exportResult,
+  exportManyResults
 };
