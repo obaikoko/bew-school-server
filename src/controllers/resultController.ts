@@ -477,53 +477,55 @@ const generatePositions = asyncHandler(
   }
 );
 
-const generateBroadsheet = asyncHandler(async (req: Request, res: Response) => {
-  const validatedData = generatePositionsSchema.parse(req.body);
-  const { level, subLevel, session, term } = validatedData;
+const generateBroadsheet = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const validatedData = generatePositionsSchema.parse(req.body);
+    const { level, subLevel, session, term } = validatedData;
 
-  // Fetch results filtered by class criteria
-  const results: StudentResult[] = await prisma.result.findMany({
-    where: {
-      session,
-      term,
-      level,
-      subLevel,
-    },
-    include: {
-      student: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
+    // Fetch results filtered by class criteria
+    const results: StudentResult[] = await prisma.result.findMany({
+      where: {
+        session,
+        term,
+        level,
+        subLevel,
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!results || results.length === 0) {
-    res.status(404);
-    throw new Error(
-      `No results found for ${level}${subLevel} ${session} session`
-    );
+    if (!results || results.length === 0) {
+      res.status(404);
+      throw new Error(
+        `No results found for ${level}${subLevel} ${session} session`
+      );
+    }
+
+    // Transform to broadsheet format
+    const broadsheet = results.map((result) => ({
+      studentId: result.studentId,
+      firstName: result.firstName || 'N/A',
+      lastName: result.lastName || 'N/A',
+      subjectResults: result.subjectResults.map((subject) => ({
+        subject: subject.subject,
+        testScore: subject.testScore,
+        examScore: subject.examScore,
+      })),
+    }));
+
+    res.status(200).json(broadsheet);
   }
-
-  // Transform to broadsheet format
-  const broadsheet = results.map((result) => ({
-    studentId: result.studentId,
-    firstName: result.firstName || 'N/A',
-    lastName: result.lastName || 'N/A',
-    subjectResults: result.subjectResults.map((subject) => ({
-      subject: subject.subject,
-      testScore: subject.testScore,
-      examScore: subject.examScore,
-    })),
-  }));
-
-  res.status(200).json(broadsheet);
-});
+);
 
 const addSubjectToResults = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     const validateData = subjectResultSchema.parse(req.body);
     const { session, term, level, subjectName } = validateData;
     const newSubject = {
@@ -581,7 +583,7 @@ const addSubjectToResults = asyncHandler(
 );
 
 const manualSubjectRemoval = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     const validateData = subjectResultSchema.parse(req.body);
     const { session, term, level, subjectName } = validateData;
 
@@ -625,95 +627,105 @@ const manualSubjectRemoval = asyncHandler(
       );
   }
 );
-const resultData = asyncHandler(async (req: Request, res: Response) => {
-  const [results, totalResults, publishedResults, unpublishedResults] =
-    await Promise.all([
-      prisma.result.findMany(),
-      prisma.result.count(),
-      prisma.result.count({
-        where: {
-          isPublished: true,
-        },
-      }),
-      prisma.result.count({
-        where: {
-          isPublished: false,
-        },
-      }),
-    ]);
+const resultData = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const [results, totalResults, publishedResults, unpublishedResults] =
+      await Promise.all([
+        prisma.result.findMany(),
+        prisma.result.count(),
+        prisma.result.count({
+          where: {
+            isPublished: true,
+          },
+        }),
+        prisma.result.count({
+          where: {
+            isPublished: false,
+          },
+        }),
+      ]);
 
-  res.status(200).json({
-    results,
-    totalResults,
-    publishedResults,
-    unpublishedResults,
-  });
-});
-
-const exportResult = asyncHandler(async (req: Request, res: Response) => {
-  const result = await prisma.result.findFirst({
-    where: {
-      id: req.params.id,
-    },
-  });
-  if (!result) {
-    res.status(404);
-    throw new Error('Not found');
+    res.status(200).json({
+      results,
+      totalResults,
+      publishedResults,
+      unpublishedResults,
+    });
   }
+);
 
-  if (!result.isPublished) {
-    res.status(401);
-    throw new Error('Result is not yet published');
+const exportResult = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const result = await prisma.result.findFirst({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (!result) {
+      res.status(404);
+      throw new Error('Not found');
+    }
+
+    if (!result.isPublished) {
+      res.status(401);
+      throw new Error('Result is not yet published');
+    }
+
+    const html = generateStudentResultHTML(result);
+    const pdfBuffer = await generateStudentPdf(html);
+
+    const fileName = `students-report-${
+      new Date().toISOString().split('T')[0]
+    }.pdf`;
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
+
+    res.send(pdfBuffer);
   }
+);
+const exportManyResults = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const validateData = generatePositionsSchema.parse(req.body);
+    const { session, level, subLevel, term } = validateData;
+    const results = await prisma.result.findMany({
+      where: {
+        session,
+        level,
+        subLevel,
+        term,
+      },
+      orderBy: {
+        lastName: 'asc', // optional: sort by student name
+      },
+    });
 
-  const html = generateStudentResultHTML(result);
-  const pdfBuffer = await generateStudentPdf(html);
+    if (results.length === 0) {
+      res.status(404);
+      throw new Error('No published results found');
+    }
 
-  const fileName = `students-report-${
-    new Date().toISOString().split('T')[0]
-  }.pdf`;
+    // Generate HTML for all results, separated by page breaks
+    const html = results
+      .map(generateStudentResultHTML)
+      .join('<div style="page-break-after: always;"></div>');
 
-  res.set({
-    'Content-Type': 'application/pdf',
-    'Content-Disposition': `attachment; filename="${fileName}"`,
-  });
+    const pdfBuffer = await generateStudentPdf(html);
 
-  res.send(pdfBuffer);
-});
-const exportManyResults = asyncHandler(async (req: Request, res: Response) => {
-  // Fetch all published results
-  const results = await prisma.result.findMany({
-    where: {
-      isPublished: true,
-    },
-    orderBy: {
-      lastName: 'asc', // optional: sort by student name
-    },
-  });
+    const fileName = `all-students-results-${
+      new Date().toISOString().split('T')[0]
+    }.pdf`;
 
-  if (results.length === 0) {
-    res.status(404);
-    throw new Error('No published results found');
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
+
+    res.send(pdfBuffer);
   }
-
-  // Generate HTML for all results, separated by page breaks
-  const html = results
-    .map(generateStudentResultHTML)
-    .join('<div style="page-break-after: always;"></div>');
-
-  const pdfBuffer = await generateStudentPdf(html);
-
-  const fileName = `all-students-results-${
-    new Date().toISOString().split('T')[0]
-  }.pdf`;
-
-  res.set({
-    'Content-Type': 'application/pdf',
-    'Content-Disposition': `attachment; filename="${fileName}"`,
-  });
-
-  res.send(pdfBuffer);
-});
+);
 
 export {
   createResult,
@@ -729,5 +741,5 @@ export {
   manualSubjectRemoval,
   resultData,
   exportResult,
-  exportManyResults
+  exportManyResults,
 };
