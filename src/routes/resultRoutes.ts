@@ -14,6 +14,7 @@ import {
   manualSubjectRemoval,
   exportResult,
   resultData,
+  exportManyResults,
 } from '../controllers/resultController';
 
 const router = express.Router();
@@ -25,6 +26,7 @@ router
   .put(protect, manualSubjectRemoval)
   .post(protect, addSubjectToResults);
 router.route('/data').get(protect, resultData);
+router.route('/pdf').get(exportManyResults);
 router
   .route('/:id')
   .post(protect, createResult)
