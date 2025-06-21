@@ -131,15 +131,17 @@ ${(0, generateLetterHead_1.generateLetterHeadHTML)(result)}
       BUS FEE: ₦25,000 &nbsp;&nbsp;&nbsp;&nbsp;
       OTHER CHARGES: ₦5,000
     </td>
+  
+  </tr>
+  <tr class="footer">
+     <td colspan="8">
+      ACCOUNT NAME: Bendonals International Schools &nbsp;&nbsp;&nbsp;&nbsp;
+      ACCOUNT NUMBER: 1234567890 &nbsp;&nbsp;&nbsp;&nbsp;
+      BANK NAME: First Bank of Nigeria &nbsp;&nbsp;&nbsp;&nbsp;
+    </td>
+  
   </tr>
 </table>
-<div style="margin-top: 30px; font-size: 14px; line-height: 1.6;">
-  <strong>ACCOUNT DETAILS:</strong><br />
-  <strong>ACCOUNT NAME:</strong> Bendonals International Schools<br />
-  <strong>ACCOUNT NUMBER:</strong> 1234567890<br />
-  <strong>BANK NAME:</strong> First Bank of Nigeria<br />
-  <strong>PAYMENT PURPOSE:</strong> Next Term’s School Fees
-</div>
 
 </body>
 </html>`;

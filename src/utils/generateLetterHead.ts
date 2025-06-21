@@ -7,11 +7,11 @@ export const generateLetterHeadHTML = (result: StudentResult) => {
 
   return `
     <div style="text-align: center; margin-bottom: 20px;">
-      <img src="cid:school_logo" alt="School Logo" style="height: 80px;" />
+      <img src="https://res.cloudinary.com/dzajrh9z7/image/upload/v1726781636/beryl/epfme50v5t4l66i6fzx3.jpg" alt="School Logo" style="height: 80px;" />
       <h2 style="margin: 0;">Bendonals International Schools</h2>
       <p style="margin: 0; font-size: 14px;">
-        NO. 9 BY MTN MAST, ODUKPANI CLOSE, IKOT ENEOBONG, F.H.E 8 MILES, CALABAR, C.R.S NIGERIA<br />
-        E-MAIL: bendonaldsschools@gmail.com TEL: 07038307768, 08169866808
+        Plot 1, Block 1, Ikot Eneobong (Federal Housing Estate) Calabar Municipality, Cross River State<br />
+        E-MAIL: berylintlschls@gmail.com TEL: 07060511978, 09073091617
       </p>
     </div>
   
