@@ -536,7 +536,7 @@ const exportResult = (0, express_async_handler_1.default)((req, res) => __awaite
 }));
 exports.exportResult = exportResult;
 const exportManyResults = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const validateData = resultValidator_1.generatePositionsSchema.parse(req.body);
+    const validateData = resultValidator_1.generatePositionsSchema.parse(req.query);
     const { session, level, subLevel, term } = validateData;
     const results = yield prisma_1.prisma.result.findMany({
         where: {

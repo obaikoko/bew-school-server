@@ -688,8 +688,9 @@ const exportResult = asyncHandler(
 );
 const exportManyResults = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const validateData = generatePositionsSchema.parse(req.body);
+    const validateData = generatePositionsSchema.parse(req.query);
     const { session, level, subLevel, term } = validateData;
+
     const results = await prisma.result.findMany({
       where: {
         session,

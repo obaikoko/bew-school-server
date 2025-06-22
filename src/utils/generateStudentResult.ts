@@ -138,7 +138,7 @@ ${generateLetterHeadHTML(result)}
   </tr>
   <tr class="footer">
      <td colspan="8">
-      ACCOUNT NAME: Bendonals International Schools &nbsp;&nbsp;&nbsp;&nbsp;
+      ACCOUNT NAME: Beryl International Schools &nbsp;&nbsp;&nbsp;&nbsp;
       ACCOUNT NUMBER: 1234567890 &nbsp;&nbsp;&nbsp;&nbsp;
       BANK NAME: First Bank of Nigeria &nbsp;&nbsp;&nbsp;&nbsp;
     </td>
