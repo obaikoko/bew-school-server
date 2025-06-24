@@ -17,12 +17,11 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const sendSingleMail = (_a) => __awaiter(void 0, [_a], void 0, function* ({ email, subject, text, }) {
     try {
         const transporter = nodemailer_1.default.createTransport({
-            service: 'Gmail',
-            host: 'smtp.gmail.com',
+            host: 'smtp.zoho.com',
             port: 587,
             auth: {
-                user: process.env.GMAILEMAIL,
-                pass: process.env.GMAILPASSWORD,
+                user: process.env.APP_EMAIL,
+                pass: process.env.APP_PASSWORD,
             },
             tls: {
                 rejectUnauthorized: true,
@@ -31,7 +30,7 @@ const sendSingleMail = (_a) => __awaiter(void 0, [_a], void 0, function* ({ emai
         const mailOptions = {
             from: {
                 name: 'BERYL INTERNATIONAL SCHOOLS',
-                address: 'berylintschl@gmail.com',
+                address: 'admin@berylintlschl.com',
             },
             to: email,
             subject,

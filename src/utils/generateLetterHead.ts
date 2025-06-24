@@ -19,8 +19,8 @@ export const generateLetterHeadHTML = (result: StudentResult) => {
         <!-- School Info -->
         <div style="flex-grow: 1; text-align: center;">
           <h2 style="margin: 0;">Beryl International Schools</h2>
-          <p style="margin: 0; color: #E22777; font-size: 14px;">
-            Plot 1, Block 1, Ikot Eneobong (Federal Housing Estate) Calabar Municipality, Cross River State<br />
+          <p style="margin: 0; color: #E22777; font-size: 20px;">
+            Plot 1, Block 1, Ikot Eneobong (Federal Housing Estate)<br /> Calabar Municipality, Cross River State<br />
             
           </p>
           </> TEL: 07060511978, 09073091617</p>

@@ -21,8 +21,8 @@ const generateStudentPdf = (html) => __awaiter(void 0, void 0, void 0, function*
     const pdfBuffer = yield page.pdf({
         format: 'A4',
         printBackground: true,
-        margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' }, // Add margins for better spacing
-        scale: 0.75, // Full scale to utilize the full page
+        margin: { top: '0.75cm', bottom: '0.75cm', left: '1cm', right: '1cm' },
+        scale: 0.7,
     });
     yield browser.close();
     return Buffer.from(pdfBuffer);

@@ -8,12 +8,11 @@ const sendSingleMail = async ({
 }: SendSingleMailProps): Promise<boolean> => {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      host: 'smtp.gmail.com',
+      host: 'smtp.zoho.com',
       port: 587,
       auth: {
-        user: process.env.GMAILEMAIL,
-        pass: process.env.GMAILPASSWORD,
+        user: process.env.APP_EMAIL,
+        pass: process.env.APP_PASSWORD,
       },
       tls: {
         rejectUnauthorized: true,
@@ -23,7 +22,7 @@ const sendSingleMail = async ({
     const mailOptions = {
       from: {
         name: 'BERYL INTERNATIONAL SCHOOLS',
-        address: 'berylintschl@gmail.com',
+        address: 'admin@berylintlschl.com',
       },
       to: email,
       subject,

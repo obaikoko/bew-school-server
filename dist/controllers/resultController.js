@@ -525,7 +525,7 @@ const exportResult = (0, express_async_handler_1.default)((req, res) => __awaite
         res.status(401);
         throw new Error('Result is not yet published');
     }
-    const html = (0, generateStudentResult_1.generateStudentResultHTML)(result);
+    const html = yield (0, generateStudentResult_1.generateStudentResultHTML)(result);
     const pdfBuffer = yield (0, generateStudentPdf_1.generateStudentPdf)(html);
     const fileName = `students-report-${new Date().toISOString().split('T')[0]}.pdf`;
     res.set({
@@ -546,7 +546,7 @@ const exportManyResults = (0, express_async_handler_1.default)((req, res) => __a
             term,
         },
         orderBy: {
-            lastName: 'asc', // optional: sort by student name
+            averageScore: 'asc',
         },
     });
     if (results.length === 0) {
@@ -554,9 +554,8 @@ const exportManyResults = (0, express_async_handler_1.default)((req, res) => __a
         throw new Error('No published results found');
     }
     // Generate HTML for all results, separated by page breaks
-    const html = results
-        .map(generateStudentResult_1.generateStudentResultHTML)
-        .join('<div style="page-break-after: always;"></div>');
+    const htmlSections = yield Promise.all(results.map(generateStudentResult_1.generateStudentResultHTML));
+    const html = htmlSections.join('<div style="page-break-after: always;"></div>');
     const pdfBuffer = yield (0, generateStudentPdf_1.generateStudentPdf)(html);
     const fileName = `all-students-results-${new Date().toISOString().split('T')[0]}.pdf`;
     res.set({

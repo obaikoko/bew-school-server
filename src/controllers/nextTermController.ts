@@ -74,7 +74,7 @@ const getNextTermInfo = asyncHandler(async (req: Request, res: Response) => {
       level,
       session,
       term,
-    },
+    }, 
   });
 
   if (!nextTermInfo) {

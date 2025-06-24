@@ -671,7 +671,7 @@ const exportResult = asyncHandler(
       throw new Error('Result is not yet published');
     }
 
-    const html = generateStudentResultHTML(result);
+    const html = await generateStudentResultHTML(result);
     const pdfBuffer = await generateStudentPdf(html);
 
     const fileName = `students-report-${
@@ -699,7 +699,7 @@ const exportManyResults = asyncHandler(
         term,
       },
       orderBy: {
-        lastName: 'asc', // optional: sort by student name
+        averageScore: 'asc',
       },
     });
 
@@ -709,9 +709,14 @@ const exportManyResults = asyncHandler(
     }
 
     // Generate HTML for all results, separated by page breaks
-    const html = results
-      .map(generateStudentResultHTML)
-      .join('<div style="page-break-after: always;"></div>');
+    const htmlSections = await Promise.all(
+      results.map(generateStudentResultHTML)
+    );
+
+    const html = htmlSections.join(
+      '<div style="page-break-after: always;"></div>'
+    );
+    
 
     const pdfBuffer = await generateStudentPdf(html);
 

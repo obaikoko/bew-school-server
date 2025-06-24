@@ -1,7 +1,38 @@
+import { prisma } from '../config/db/prisma';
 import { StudentResult } from '../schemas/resultSchema';
 import { generateLetterHeadHTML } from './generateLetterHead';
 
-export const generateStudentResultHTML = (result: StudentResult) => {
+function formatCurrency(value?: number | string | null): string {
+  if (!value || isNaN(Number(value))) return '₦-';
+  return new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+function formatDate(value?: Date | null): string {
+  if (!value) return '-';
+  const date = new Date(value);
+  return date.toLocaleDateString('en-NG', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+export const generateStudentResultHTML = async (result: StudentResult) => {
+  const nextTermInfo = await prisma.nextTerm.findFirst({
+    where: {
+      session: result.session,
+      term: result.term,
+      level: result.level,
+    },
+  });
+
+  if (!nextTermInfo) {
+    throw new Error('No resumption info found');
+  }
   const subjectRows = result.subjectResults
     .map((subject) => {
       return `<tr>
@@ -122,25 +153,41 @@ ${generateLetterHeadHTML(result)}
   </tr>
   <tr class="footer">
     <td colspan="8">
-      PASS/FAIL: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
-      CONDUCT: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
-      SIGNATURE: ____________
+    Teachers' Remark: ${result.teacherRemark}
     </td>
   </tr>
   <tr class="footer">
     <td colspan="8">
-      RE-OPENING DATE: 12TH SEPTEMBER, 2024 &nbsp;&nbsp;&nbsp;&nbsp;
-      NEXT TERM'S FEE: ₦35,000 &nbsp;&nbsp;&nbsp;&nbsp;
-      BUS FEE: ₦25,000 &nbsp;&nbsp;&nbsp;&nbsp;
-      OTHER CHARGES: ₦5,000
+     Principals/Head Teachers Remark: ${result.principalRemark}
+    </td>
+  </tr>
+  <tr class="footer">
+    <td colspan="8">
+      Pass/Fail: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
+      Conduct: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
+      Signature: ____________
+    </td>
+  </tr>
+  <tr class="footer">
+    <td colspan="8">
+      Re-Opening Date: ${formatDate(
+        nextTermInfo.reOpeningDate ?? '-'
+      )} &nbsp;&nbsp;&nbsp;&nbsp;
+      Next Term Fee: ₦${formatCurrency(
+        nextTermInfo.nextTermFee ?? '-'
+      )} &nbsp;&nbsp;&nbsp;&nbsp;
+      Bus Fare: ₦${formatCurrency(
+        nextTermInfo.busFee ?? '-'
+      )} &nbsp;&nbsp;&nbsp;&nbsp;
+      Other Charges: ₦${formatCurrency(nextTermInfo.otherCharges && '-')} 
     </td>
   
   </tr>
   <tr class="footer">
      <td colspan="8">
-      ACCOUNT NAME: Beryl International Schools &nbsp;&nbsp;&nbsp;&nbsp;
-      ACCOUNT NUMBER: 1234567890 &nbsp;&nbsp;&nbsp;&nbsp;
-      BANK NAME: First Bank of Nigeria &nbsp;&nbsp;&nbsp;&nbsp;
+      Account Name: Beryl International Schools &nbsp;&nbsp;&nbsp;&nbsp;
+      Account Number: 1234567890 &nbsp;&nbsp;&nbsp;&nbsp;
+      Bank Name: First Bank of Nigeria &nbsp;&nbsp;&nbsp;&nbsp;
     </td>
   
   </tr>

@@ -9,8 +9,8 @@ export const generateStudentPdf = async (html: string): Promise<Buffer> => {
   const pdfBuffer = await page.pdf({
     format: 'A4',
     printBackground: true,
-    margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' }, // Add margins for better spacing
-    scale: 0.75, // Full scale to utilize the full page
+    margin: { top: '0.75cm', bottom: '0.75cm', left: '1cm', right: '1cm' }, 
+    scale: 0.7, 
   });
 
   await browser.close();

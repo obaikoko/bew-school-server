@@ -1,9 +1,48 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateStudentResultHTML = void 0;
+const prisma_1 = require("../config/db/prisma");
 const generateLetterHead_1 = require("./generateLetterHead");
-const generateStudentResultHTML = (result) => {
-    var _a;
+function formatCurrency(value) {
+    if (!value || isNaN(Number(value)))
+        return '₦-';
+    return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        minimumFractionDigits: 0,
+    }).format(Number(value));
+}
+function formatDate(value) {
+    if (!value)
+        return '-';
+    const date = new Date(value);
+    return date.toLocaleDateString('en-NG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
+const generateStudentResultHTML = (result) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
+    const nextTermInfo = yield prisma_1.prisma.nextTerm.findFirst({
+        where: {
+            session: result.session,
+            term: result.term,
+            level: result.level,
+        },
+    });
+    if (!nextTermInfo) {
+        throw new Error('No resumption info found');
+    }
     const subjectRows = result.subjectResults
         .map((subject) => {
         return `<tr>
@@ -119,25 +158,35 @@ ${(0, generateLetterHead_1.generateLetterHeadHTML)(result)}
   </tr>
   <tr class="footer">
     <td colspan="8">
-      PASS/FAIL: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
-      CONDUCT: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
-      SIGNATURE: ____________
+    Teachers' Remark: ${result.teacherRemark}
     </td>
   </tr>
   <tr class="footer">
     <td colspan="8">
-      RE-OPENING DATE: 12TH SEPTEMBER, 2024 &nbsp;&nbsp;&nbsp;&nbsp;
-      NEXT TERM'S FEE: ₦35,000 &nbsp;&nbsp;&nbsp;&nbsp;
-      BUS FEE: ₦25,000 &nbsp;&nbsp;&nbsp;&nbsp;
-      OTHER CHARGES: ₦5,000
+     Principals/Head Teachers Remark: ${result.principalRemark}
+    </td>
+  </tr>
+  <tr class="footer">
+    <td colspan="8">
+      Pass/Fail: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
+      Conduct: ____________ &nbsp;&nbsp;&nbsp;&nbsp; 
+      Signature: ____________
+    </td>
+  </tr>
+  <tr class="footer">
+    <td colspan="8">
+      Re-Opening Date: ${formatDate((_b = nextTermInfo.reOpeningDate) !== null && _b !== void 0 ? _b : '-')} &nbsp;&nbsp;&nbsp;&nbsp;
+      Next Term Fee: ₦${formatCurrency((_c = nextTermInfo.nextTermFee) !== null && _c !== void 0 ? _c : '-')} &nbsp;&nbsp;&nbsp;&nbsp;
+      Bus Fare: ₦${formatCurrency((_d = nextTermInfo.busFee) !== null && _d !== void 0 ? _d : '-')} &nbsp;&nbsp;&nbsp;&nbsp;
+      Other Charges: ₦${formatCurrency(nextTermInfo.otherCharges && '-')} 
     </td>
   
   </tr>
   <tr class="footer">
      <td colspan="8">
-      ACCOUNT NAME: Beryl International Schools &nbsp;&nbsp;&nbsp;&nbsp;
-      ACCOUNT NUMBER: 1234567890 &nbsp;&nbsp;&nbsp;&nbsp;
-      BANK NAME: First Bank of Nigeria &nbsp;&nbsp;&nbsp;&nbsp;
+      Account Name: Beryl International Schools &nbsp;&nbsp;&nbsp;&nbsp;
+      Account Number: 1234567890 &nbsp;&nbsp;&nbsp;&nbsp;
+      Bank Name: First Bank of Nigeria &nbsp;&nbsp;&nbsp;&nbsp;
     </td>
   
   </tr>
@@ -145,5 +194,5 @@ ${(0, generateLetterHead_1.generateLetterHeadHTML)(result)}
 
 </body>
 </html>`;
-};
+});
 exports.generateStudentResultHTML = generateStudentResultHTML;
