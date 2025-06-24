@@ -9,6 +9,6 @@ export const admissionSchema = z.object({
   dateOfBirth: z.string().transform((val) => new Date(val)),
   gender: z.string(),
   level: z.string(),
-});
+}); 
 
 export type AdmissionInput = z.infer<typeof admissionSchema>;
