@@ -391,14 +391,8 @@ const generateBroadsheet = (0, express_async_handler_1.default)((req, res) => __
             level,
             subLevel,
         },
-        include: {
-            student: {
-                select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                },
-            },
+        orderBy: {
+            averageScore: 'desc',
         },
     });
     if (!results || results.length === 0) {
@@ -410,6 +404,7 @@ const generateBroadsheet = (0, express_async_handler_1.default)((req, res) => __
         studentId: result.studentId,
         firstName: result.firstName || 'N/A',
         lastName: result.lastName || 'N/A',
+        position: result.position || 'N/A',
         subjectResults: result.subjectResults.map((subject) => ({
             subject: subject.subject,
             testScore: subject.testScore,

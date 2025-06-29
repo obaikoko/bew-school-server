@@ -483,21 +483,15 @@ const generateBroadsheet = asyncHandler(
     const { level, subLevel, session, term } = validatedData;
 
     // Fetch results filtered by class criteria
-    const results: StudentResult[] = await prisma.result.findMany({
+    const results = await prisma.result.findMany({
       where: {
         session,
         term,
         level,
         subLevel,
       },
-      include: {
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
+      orderBy: {
+        averageScore: 'desc',
       },
     });
 
@@ -513,13 +507,14 @@ const generateBroadsheet = asyncHandler(
       studentId: result.studentId,
       firstName: result.firstName || 'N/A',
       lastName: result.lastName || 'N/A',
+      position: result.position || 'N/A',
       subjectResults: result.subjectResults.map((subject) => ({
         subject: subject.subject,
         testScore: subject.testScore,
         examScore: subject.examScore,
       })),
     }));
-
+ 
     res.status(200).json(broadsheet);
   }
 );
@@ -716,7 +711,6 @@ const exportManyResults = asyncHandler(
     const html = htmlSections.join(
       '<div style="page-break-after: always;"></div>'
     );
-    
 
     const pdfBuffer = await generateStudentPdf(html);
 

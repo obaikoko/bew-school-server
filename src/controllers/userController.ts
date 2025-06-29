@@ -185,6 +185,7 @@ const updateUser = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const validateData = updateUserSchema.parse(req.body);
+
       const {
         userId,
         firstName,
