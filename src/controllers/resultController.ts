@@ -669,6 +669,32 @@ const resultData = asyncHandler(
   }
 );
 
+const studentResultData = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    let totalResults, previousResult;
+
+    [totalResults, previousResult] = await Promise.all([
+      prisma.result.count({
+        where: {
+          studentId: req.student.id,
+        },
+      }),
+      prisma.result.findMany({
+        where: { studentId: req.student.id, isPublished: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    res.status(200).json({
+      totalResults: previousResult.length,
+      totalSubjects: previousResult[0].subjectResults.length,
+      average: previousResult[0].averageScore,
+      result: previousResult[0],
+      results: previousResult,
+    });
+  } 
+);
+
 const exportResult = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     const result = await prisma.result.findFirst({
@@ -760,6 +786,7 @@ export {
   addSubjectToResults,
   manualSubjectRemoval,
   resultData,
+  studentResultData,
   exportResult,
   exportManyResults,
 };

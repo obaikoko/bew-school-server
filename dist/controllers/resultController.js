@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportManyResults = exports.exportResult = exports.resultData = exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
+exports.exportManyResults = exports.exportResult = exports.studentResultData = exports.resultData = exports.manualSubjectRemoval = exports.addSubjectToResults = exports.generateBroadsheet = exports.generatePositions = exports.updateResultPayment = exports.deleteResult = exports.updateResult = exports.getStudentResults = exports.getResults = exports.getResult = exports.createResult = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const subjectResults_1 = require("../utils/subjectResults"); // adjust the import path
@@ -524,6 +524,28 @@ const resultData = (0, express_async_handler_1.default)((req, res) => __awaiter(
     });
 }));
 exports.resultData = resultData;
+const studentResultData = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let totalResults, previousResult;
+    [totalResults, previousResult] = yield Promise.all([
+        prisma_1.prisma.result.count({
+            where: {
+                studentId: req.student.id,
+            },
+        }),
+        prisma_1.prisma.result.findMany({
+            where: { studentId: req.student.id, isPublished: true },
+            orderBy: { createdAt: 'desc' },
+        }),
+    ]);
+    res.status(200).json({
+        totalResults: previousResult.length,
+        totalSubjects: previousResult[0].subjectResults.length,
+        average: previousResult[0].averageScore,
+        result: previousResult[0],
+        results: previousResult,
+    });
+}));
+exports.studentResultData = studentResultData;
 const exportResult = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield prisma_1.prisma.result.findFirst({
         where: {

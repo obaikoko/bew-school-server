@@ -15,6 +15,7 @@ import {
   exportResult,
   resultData,
   exportManyResults,
+  studentResultData,
 } from '../controllers/resultController';
 
 const router = express.Router();
@@ -26,6 +27,7 @@ router
   .put(protect, manualSubjectRemoval)
   .post(protect, addSubjectToResults);
 router.route('/data').get(protect, resultData);
+router.route('/data/student-results').get(protect, studentResultData);
 router.route('/pdf').get(exportManyResults);
 router
   .route('/:id')

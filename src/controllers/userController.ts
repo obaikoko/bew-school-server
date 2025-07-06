@@ -72,6 +72,9 @@ const authUser = asyncHandler(
   }
 );
 
+// @route POST api/users/logout
+// @desc Logout user
+// @privacy Public
 const logoutUser = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {

@@ -72,6 +72,9 @@ const authUser = (0, express_async_handler_1.default)((req, res) => __awaiter(vo
     }
 }));
 exports.authUser = authUser;
+// @route POST api/users/logout
+// @desc Logout user
+// @privacy Public
 const logoutUser = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         res.cookie('jwt', '', {

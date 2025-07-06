@@ -79,10 +79,8 @@ const authStudent = asyncHandler(
           createdAt: true,
         },
       });
-
-      res.status(200);
       generateToken(res, student.id);
-      res.json(authenticatedStudent);
+      res.status(200).json(authenticatedStudent);
     } catch (error) {
       throw error;
     }
@@ -352,7 +350,7 @@ const getStudentsRegisteredByUser = asyncHandler(
       skip: pageSize * (page - 1),
       take: pageSize,
     });
- 
+
     res.status(200).json({
       students,
       page,
@@ -442,6 +440,51 @@ const getStudent = asyncHandler(
       },
       where: {
         id: req.params.id,
+      },
+    });
+    if (!student) {
+      res.status(400);
+      throw new Error('Student not found!');
+    }
+    res.status(200);
+    res.json(student);
+  }
+);
+
+// GET  STUDENT
+// @route GET api/students/:id
+// @privacy Private ADMIN
+const getStudentProfile = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+ 
+
+    const student = await prisma.student.findFirst({
+      select: {
+        id: true,
+        studentId: true,
+        firstName: true,
+        lastName: true,
+        otherName: true,
+        dateOfBirth: true,
+        level: true,
+        subLevel: true,
+        isStudent: true,
+        isPaid: true,
+        gender: true,
+        yearAdmitted: true,
+        stateOfOrigin: true,
+        localGvt: true,
+        homeTown: true,
+        sponsorEmail: true,
+        sponsorName: true,
+        sponsorPhoneNumber: true,
+        sponsorRelationship: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      where: {
+        id: req.student.id,
       },
     });
     if (!student) {
@@ -543,37 +586,35 @@ const updateStudent = asyncHandler(
     res.status(200).json(updateStudent);
   }
 );
-
 // @desc Delete student
 // @route DELETE api/students/:id
 // @privacy Private ADMIN
 const deleteStudent = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    try {
-      if (!req.user) {
-        res.status(401);
-        throw new Error('Unauthorized User');
-      }
-      const student = await prisma.student.findUnique({
-        where: {
-          id: req.params.id,
-        },
-      });
-
-      if (!student) {
-        res.status(404);
-        throw new Error('Student Not Found!');
-      }
-      const deleteStudent = await prisma.student.delete({
-        where: {
-          id: student.id,
-        },
-      });
-
-      res.status(200).json('Student data deleted');
-    } catch (error) {
-      throw error;
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Unauthorized User');
     }
+    const student = await prisma.student.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!student) {
+      res.status(404);
+      throw new Error('Student Not Found!');
+    }
+
+    // Delete child results first
+    await prisma.result.deleteMany({
+      where: { studentId: student.id },
+    });
+
+    // Then delete student
+    await prisma.student.delete({
+      where: { id: student.id },
+    });
+
+    res.status(200).json('Student data deleted');
   }
 );
 
@@ -606,7 +647,7 @@ const forgetPassword = asyncHandler(
         .digest('hex');
 
       const newDate = new Date(Date.now() + 60 * 60 * 1000);
-      const updateStudent = await prisma.student.update({
+      await prisma.student.update({
         where: { id: student.id },
         data: {
           resetPasswordToken: hashedToken,
@@ -730,6 +771,7 @@ export {
   getAllStudents,
   getStudentsRegisteredByUser,
   getStudent,
+  getStudentProfile,
   deleteStudent,
   forgetPassword,
   resetPassword,

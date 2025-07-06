@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.graduateStudent = exports.exportStudentsCSV = exports.updateStudent = exports.resetPassword = exports.forgetPassword = exports.deleteStudent = exports.getStudent = exports.getStudentsRegisteredByUser = exports.getAllStudents = exports.registerStudent = exports.authStudent = void 0;
+exports.graduateStudent = exports.exportStudentsCSV = exports.updateStudent = exports.resetPassword = exports.forgetPassword = exports.deleteStudent = exports.getStudentProfile = exports.getStudent = exports.getStudentsRegisteredByUser = exports.getAllStudents = exports.registerStudent = exports.authStudent = void 0;
 // src/controllers/studentController.ts
 const json2csv_1 = require("json2csv");
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
@@ -80,9 +80,8 @@ const authStudent = (0, express_async_handler_1.default)((req, res) => __awaiter
                 createdAt: true,
             },
         });
-        res.status(200);
         (0, generateToken_1.default)(res, student.id);
-        res.json(authenticatedStudent);
+        res.status(200).json(authenticatedStudent);
     }
     catch (error) {
         throw error;
@@ -396,6 +395,47 @@ const getStudent = (0, express_async_handler_1.default)((req, res) => __awaiter(
     res.json(student);
 }));
 exports.getStudent = getStudent;
+// GET  STUDENT
+// @route GET api/students/:id
+// @privacy Private ADMIN
+const getStudentProfile = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const student = yield prisma_1.prisma.student.findFirst({
+        select: {
+            id: true,
+            studentId: true,
+            firstName: true,
+            lastName: true,
+            otherName: true,
+            dateOfBirth: true,
+            level: true,
+            subLevel: true,
+            isStudent: true,
+            isPaid: true,
+            gender: true,
+            yearAdmitted: true,
+            stateOfOrigin: true,
+            localGvt: true,
+            homeTown: true,
+            sponsorEmail: true,
+            sponsorName: true,
+            sponsorPhoneNumber: true,
+            sponsorRelationship: true,
+            imageUrl: true,
+            createdAt: true,
+            updatedAt: true,
+        },
+        where: {
+            id: req.student.id,
+        },
+    });
+    if (!student) {
+        res.status(400);
+        throw new Error('Student not found!');
+    }
+    res.status(200);
+    res.json(student);
+}));
+exports.getStudentProfile = getStudentProfile;
 // @desc Update student
 // @route PUT api/students/:id
 // @privacy Private ADMIN
@@ -468,30 +508,26 @@ exports.updateStudent = updateStudent;
 // @route DELETE api/students/:id
 // @privacy Private ADMIN
 const deleteStudent = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        if (!req.user) {
-            res.status(401);
-            throw new Error('Unauthorized User');
-        }
-        const student = yield prisma_1.prisma.student.findUnique({
-            where: {
-                id: req.params.id,
-            },
-        });
-        if (!student) {
-            res.status(404);
-            throw new Error('Student Not Found!');
-        }
-        const deleteStudent = yield prisma_1.prisma.student.delete({
-            where: {
-                id: student.id,
-            },
-        });
-        res.status(200).json('Student data deleted');
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Unauthorized User');
     }
-    catch (error) {
-        throw error;
+    const student = yield prisma_1.prisma.student.findUnique({
+        where: { id: req.params.id },
+    });
+    if (!student) {
+        res.status(404);
+        throw new Error('Student Not Found!');
     }
+    // Delete child results first
+    yield prisma_1.prisma.result.deleteMany({
+        where: { studentId: student.id },
+    });
+    // Then delete student
+    yield prisma_1.prisma.student.delete({
+        where: { id: student.id },
+    });
+    res.status(200).json('Student data deleted');
 }));
 exports.deleteStudent = deleteStudent;
 // @desc Send reset password link student
@@ -519,7 +555,7 @@ const forgetPassword = (0, express_async_handler_1.default)((req, res) => __awai
             .update(resetToken)
             .digest('hex');
         const newDate = new Date(Date.now() + 60 * 60 * 1000);
-        const updateStudent = yield prisma_1.prisma.student.update({
+        yield prisma_1.prisma.student.update({
             where: { id: student.id },
             data: {
                 resetPasswordToken: hashedToken,
