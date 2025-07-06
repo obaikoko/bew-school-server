@@ -21,7 +21,18 @@ const studentsData = (0, express_async_handler_1.default)((req, res) => __awaite
         res.status(401);
         throw new Error('Unauthorized User');
     }
-    const allStudents = yield prisma_1.prisma.student.findMany();
+    let allStudents;
+    if (req.user.isAdmin) {
+        allStudents = yield prisma_1.prisma.student.findMany();
+    }
+    else {
+        allStudents = yield prisma_1.prisma.student.findMany({
+            where: {
+                level: req.user.level || '',
+                subLevel: req.user.subLevel || '',
+            },
+        });
+    }
     const genderCounts = { Male: 0, Female: 0 };
     const levelGenderCounts = {};
     // Initialize levelGenderCounts

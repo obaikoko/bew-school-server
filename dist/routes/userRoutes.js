@@ -14,7 +14,7 @@ router.post('/mails', authMiddleware_1.protect, authMiddleware_1.admin, userCont
 router.post('/logout', userController_1.logoutUser);
 router.route('/forget-password').post(userController_1.forgetPassword);
 router.route('/reset-password').put(userController_1.resetPassword);
-router.route('/profile').get(authMiddleware_1.protect, userController_1.getUserProfile);
+router.route('/profile/:id').get(authMiddleware_1.protect, userController_1.getUserProfile);
 router
     .route('/:id')
     .get(authMiddleware_1.protect, authMiddleware_1.admin, userController_1.getUserById)

@@ -466,6 +466,7 @@ const generatePositions = asyncHandler(
           data: {
             position,
             numberInClass,
+            isPublished: true,
           },
         })
       )
@@ -514,7 +515,7 @@ const generateBroadsheet = asyncHandler(
         examScore: subject.examScore,
       })),
     }));
- 
+
     res.status(200).json(broadsheet);
   }
 );
@@ -622,26 +623,45 @@ const manualSubjectRemoval = asyncHandler(
       );
   }
 );
+
 const resultData = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const [results, totalResults, publishedResults, unpublishedResults] =
-      await Promise.all([
-        prisma.result.findMany(),
+    if (!req.user) {
+      res.status(401);
+      throw new Error('Unauthorized User');
+    }
+
+    let totalResults, publishedResults, unpublishedResults;
+
+    if (req.user.isAdmin) {
+      // Admin: get all results
+      [totalResults, publishedResults, unpublishedResults] = await Promise.all([
         prisma.result.count(),
         prisma.result.count({
-          where: {
-            isPublished: true,
-          },
+          where: { isPublished: true },
         }),
         prisma.result.count({
-          where: {
-            isPublished: false,
-          },
+          where: { isPublished: false },
         }),
       ]);
+    } else {
+      const filter = {
+        level: req.user.level || '',
+        subLevel: req.user.subLevel || '',
+      };
+
+      [totalResults, publishedResults, unpublishedResults] = await Promise.all([
+        prisma.result.count({ where: filter }),
+        prisma.result.count({
+          where: { ...filter, isPublished: true },
+        }),
+        prisma.result.count({
+          where: { ...filter, isPublished: false },
+        }),
+      ]);
+    }
 
     res.status(200).json({
-      results,
       totalResults,
       publishedResults,
       unpublishedResults,

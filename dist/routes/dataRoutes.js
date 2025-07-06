@@ -7,6 +7,6 @@ const express_1 = __importDefault(require("express"));
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const data_controller_1 = require("../controllers/data-controller");
 const router = express_1.default.Router();
-router.route('/students').get(authMiddleware_1.protect, authMiddleware_1.admin, data_controller_1.studentsData);
+router.route('/students').get(authMiddleware_1.protect, data_controller_1.studentsData);
 router.route('/users').get(authMiddleware_1.protect, authMiddleware_1.admin, data_controller_1.userData);
 exports.default = router;

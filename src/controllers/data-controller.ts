@@ -2,17 +2,27 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import { prisma } from '../config/db/prisma';
 import { levels } from '../utils/classUtils';
-
 const studentsData = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     res.status(401);
     throw new Error('Unauthorized User');
   }
 
-  const allStudents = await prisma.student.findMany();
+  let allStudents;
+
+  if (req.user.isAdmin) {
+    allStudents = await prisma.student.findMany();
+  } else {
+    allStudents = await prisma.student.findMany({
+      where: {
+        level: req.user.level || '',
+        subLevel: req.user.subLevel || '',
+      },
+    });
+  }
 
   const genderCounts: Record<string, number> = { Male: 0, Female: 0 };
-  const levelGenderCounts: Record<string, Record<string, number>> = {} as any;
+  const levelGenderCounts: Record<string, Record<string, number>> = {};
 
   // Initialize levelGenderCounts
   for (const level of levels) {

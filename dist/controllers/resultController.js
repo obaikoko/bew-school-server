@@ -373,6 +373,7 @@ const generatePositions = (0, express_async_handler_1.default)((req, res) => __a
         data: {
             position,
             numberInClass,
+            isPublished: true,
         },
     })));
     res.status(200).json({
@@ -484,22 +485,39 @@ const manualSubjectRemoval = (0, express_async_handler_1.default)((req, res) => 
 }));
 exports.manualSubjectRemoval = manualSubjectRemoval;
 const resultData = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const [results, totalResults, publishedResults, unpublishedResults] = yield Promise.all([
-        prisma_1.prisma.result.findMany(),
-        prisma_1.prisma.result.count(),
-        prisma_1.prisma.result.count({
-            where: {
-                isPublished: true,
-            },
-        }),
-        prisma_1.prisma.result.count({
-            where: {
-                isPublished: false,
-            },
-        }),
-    ]);
+    if (!req.user) {
+        res.status(401);
+        throw new Error('Unauthorized User');
+    }
+    let totalResults, publishedResults, unpublishedResults;
+    if (req.user.isAdmin) {
+        // Admin: get all results
+        [totalResults, publishedResults, unpublishedResults] = yield Promise.all([
+            prisma_1.prisma.result.count(),
+            prisma_1.prisma.result.count({
+                where: { isPublished: true },
+            }),
+            prisma_1.prisma.result.count({
+                where: { isPublished: false },
+            }),
+        ]);
+    }
+    else {
+        const filter = {
+            level: req.user.level || '',
+            subLevel: req.user.subLevel || '',
+        };
+        [totalResults, publishedResults, unpublishedResults] = yield Promise.all([
+            prisma_1.prisma.result.count({ where: filter }),
+            prisma_1.prisma.result.count({
+                where: Object.assign(Object.assign({}, filter), { isPublished: true }),
+            }),
+            prisma_1.prisma.result.count({
+                where: Object.assign(Object.assign({}, filter), { isPublished: false }),
+            }),
+        ]);
+    }
     res.status(200).json({
-        results,
         totalResults,
         publishedResults,
         unpublishedResults,
