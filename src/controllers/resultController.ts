@@ -382,6 +382,8 @@ const deleteResult = asyncHandler(
   }
 );
 
+
+
 // @desc updates result to paid and makes it visible to student
 // @privacy private
 const updateResultPayment = asyncHandler(
@@ -389,7 +391,7 @@ const updateResultPayment = asyncHandler(
     try {
       const validateData = updateResultPaymentSchema.parse(req.body);
       const { resultId, resultFee } = validateData;
-
+ 
       const result = await prisma.result.findFirst({
         where: {
           id: resultId,

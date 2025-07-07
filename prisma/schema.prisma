@@ -137,7 +137,7 @@ model Result {
   numberInClass   Int?
   teacherRemark   String?
   principalRemark String?
-  isPaid          Boolean  @default(false)
+  isPaid          Boolean  @default(true)
   isPublished     Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
