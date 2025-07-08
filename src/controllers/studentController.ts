@@ -160,7 +160,7 @@ const registerStudent = asyncHandler(
         });
       }
 
-      const studentId = `BDIS/${currentYear}/${classCode}/${tracker.lastNumber
+      const studentId = `BIS/${currentYear}/${classCode}/${tracker.lastNumber
         .toString()
         .padStart(3, '0')}`;
 
