@@ -30,7 +30,6 @@ const registerStaff = asyncHandler(async (req: Request, res: Response) => {
     imagePublicId,
   } = validateData;
 
-  console.log('Models:', Object.keys(prisma));
 
   const staffExist = await prisma.staff.findFirst({
     where: {

@@ -19,7 +19,6 @@ const staffValidators_1 = require("../validators/staffValidators");
 const registerStaff = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const validateData = staffValidators_1.registerStaffSchema.parse(req.body);
     const { firstName, lastName, otherName, dateOfBirth, qualification, category, role, gender, maritalStatus, yearAdmitted, stateOfOrigin, localGvt, homeTown, residence, phone, email, imageUrl, imagePublicId, } = validateData;
-    console.log('Models:', Object.keys(prisma_1.prisma));
     const staffExist = yield prisma_1.prisma.staff.findFirst({
         where: {
             firstName: { equals: firstName, mode: 'insensitive' },

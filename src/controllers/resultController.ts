@@ -689,11 +689,12 @@ const studentResultData = asyncHandler(
 
     res.status(200).json({
       totalResults: previousResult.length,
-      totalSubjects: previousResult[0].subjectResults.length,
-      average: previousResult[0].averageScore,
-      result: previousResult[0],
+      totalSubjects: previousResult[0]?.subjectResults?.length || 0,
+      average: previousResult[0]?.averageScore || 0,
+      result: previousResult[0] || null,
       results: previousResult,
     });
+    
   } 
 );
 
