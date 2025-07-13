@@ -5,6 +5,7 @@ import {
   NextTerm,
   Staff,
   Admission,
+  Event,
 } from '@prisma/client'; // or from your model types
 
 declare global {
@@ -16,6 +17,7 @@ declare global {
       nextTerm: NextTerm;
       staff: Staff;
       admission: Admission;
+      event: Event
     }
   }
 }

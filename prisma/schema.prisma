@@ -169,3 +169,14 @@ type psychomotor {
   pCategory String
   grade     String @default("-")
 }
+
+model Event {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  description   String
+  date          DateTime
+  imageUrl      String?
+  imagePublicId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
