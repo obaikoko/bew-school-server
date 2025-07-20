@@ -8,3 +8,9 @@ export const eventSchema = z.object({
   date: z.coerce.date(),
   imageUrl: z.string().min(1, 'Please add an image'),
 });
+export const updateEventSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  date: z.coerce.date().optional(),
+  imageUrl: z.string().optional(),
+});
