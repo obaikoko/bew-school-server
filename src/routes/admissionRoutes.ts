@@ -4,7 +4,6 @@ import {
   deleteAdmission,
   getAllRequest,
   getSingleRequest,
-  sendMail,
 } from '../controllers/admission-controller';
 import { protect, admin } from '../middleware/authMiddleware';
 
@@ -14,7 +13,6 @@ router.route('/').post(createAdmission).get(protect, admin, getAllRequest);
 router
   .route('/:id')
   .get(protect, admin, getSingleRequest)
-  .post(protect, admin, sendMail)
   .delete(protect, admin, deleteAdmission);
 
 export default router;

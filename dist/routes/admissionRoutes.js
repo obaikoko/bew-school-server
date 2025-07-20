@@ -11,6 +11,5 @@ router.route('/').post(admission_controller_1.createAdmission).get(authMiddlewar
 router
     .route('/:id')
     .get(authMiddleware_1.protect, authMiddleware_1.admin, admission_controller_1.getSingleRequest)
-    .post(authMiddleware_1.protect, authMiddleware_1.admin, admission_controller_1.sendMail)
     .delete(authMiddleware_1.protect, authMiddleware_1.admin, admission_controller_1.deleteAdmission);
 exports.default = router;

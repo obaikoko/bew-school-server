@@ -18,7 +18,6 @@ const createAdmission = asyncHandler(async (req: Request, res: Response) => {
     level,
   } = validateData;
 
-  
   const admission = await prisma.admission.create({
     data: {
       firstName,
@@ -70,26 +69,6 @@ const getSingleRequest = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json(admission);
 });
 
-const sendMail = asyncHandler(async (req: Request, res: Response) => {
-  const { subject, text } = req.body;
-  const admission = await prisma.admission.findUnique({
-    where: { id: req.params.id },
-  });
-
-  if (!admission) {
-    res.status(404);
-    throw new Error('Not found!');
-  }
-
-  await sendSingleMail({
-    email: admission.email,
-    subject,
-    text,
-  });
-
-  res.status(200).json('Email sent successfully');
-});
-
 const deleteAdmission = asyncHandler(async (req: Request, res: Response) => {
   await prisma.admission.delete({
     where: { id: req.params.id },
@@ -98,10 +77,4 @@ const deleteAdmission = asyncHandler(async (req: Request, res: Response) => {
   res.status(200).json('Admission request deleted successfully');
 });
 
-export {
-  createAdmission,
-  getAllRequest,
-  getSingleRequest,
-  deleteAdmission,
-  sendMail,
-};
+export { createAdmission, getAllRequest, getSingleRequest, deleteAdmission };

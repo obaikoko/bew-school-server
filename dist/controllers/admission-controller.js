@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMail = exports.deleteAdmission = exports.getSingleRequest = exports.getAllRequest = exports.createAdmission = void 0;
+exports.deleteAdmission = exports.getSingleRequest = exports.getAllRequest = exports.createAdmission = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const admissionValidators_1 = require("../validators/admissionValidators");
@@ -65,23 +65,6 @@ const getSingleRequest = (0, express_async_handler_1.default)((req, res) => __aw
     res.status(200).json(admission);
 }));
 exports.getSingleRequest = getSingleRequest;
-const sendMail = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { subject, text } = req.body;
-    const admission = yield prisma_1.prisma.admission.findUnique({
-        where: { id: req.params.id },
-    });
-    if (!admission) {
-        res.status(404);
-        throw new Error('Not found!');
-    }
-    yield (0, emailService_1.sendSingleMail)({
-        email: admission.email,
-        subject,
-        text,
-    });
-    res.status(200).json('Email sent successfully');
-}));
-exports.sendMail = sendMail;
 const deleteAdmission = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield prisma_1.prisma.admission.delete({
         where: { id: req.params.id },
