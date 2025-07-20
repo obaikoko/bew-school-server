@@ -114,6 +114,18 @@ const updateEvent = asyncHandler(async (req: Request, res: Response) => {
       res.status(200).json(updatedEvent);
     }
   }
+  const updatedEvent = await prisma.event.update({
+    where: {
+      id: event.id,
+    },
+    data: {
+      title: title ?? event.title,
+      description: description ?? event.description,
+      date: date ?? event.date,
+    },
+  });
+
+  res.status(200).json(updatedEvent);
 });
 
 const deleteEvent = asyncHandler(async (req, res) => {

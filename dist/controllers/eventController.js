@@ -115,6 +115,17 @@ const updateEvent = (0, express_async_handler_1.default)((req, res) => __awaiter
             res.status(200).json(updatedEvent);
         }
     }
+    const updatedEvent = yield prisma_1.prisma.event.update({
+        where: {
+            id: event.id,
+        },
+        data: {
+            title: title !== null && title !== void 0 ? title : event.title,
+            description: description !== null && description !== void 0 ? description : event.description,
+            date: date !== null && date !== void 0 ? date : event.date,
+        },
+    });
+    res.status(200).json(updatedEvent);
 }));
 exports.updateEvent = updateEvent;
 const deleteEvent = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
