@@ -13,4 +13,6 @@ export type User = z.infer<typeof insertUserSchema> & {
 };
 
 export type SendSingleMailProps = z.infer<typeof sendSingleMailSchema>;
-export type SendBulkMailProps = z.infer<typeof sendBulkMailSchema>;
+export type SendBulkMailProps = z.infer<typeof sendBulkMailSchema> & {
+  emails: string[];
+};

@@ -8,6 +8,7 @@ import {
   getUserById,
   deleteUser,
   sendMail,
+  sendMultipleMails,
   forgetPassword,
   resetPassword,
 } from '../controllers/userController';
@@ -18,12 +19,12 @@ const router = express.Router();
 router.route('/').get(protect, admin, getUsers);
 router.route('/register').post(registerUser);
 router.route('/auth').post(authUser);
+router.post('/mails-bulk', protect, admin, sendMultipleMails);
 router.post('/mails', protect, admin, sendMail);
 
 router.post('/logout', logoutUser);
 router.route('/forget-password').post(forgetPassword);
 router.route('/reset-password').put(resetPassword);
-
 
 router.route('/profile/:id').get(protect, getUserProfile);
 router

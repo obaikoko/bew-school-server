@@ -4,6 +4,7 @@ import {
   forgetPasswordSchema,
   insertUserSchema,
   resetPasswordSchema,
+  sendBulkMailSchema,
   sendSingleMailSchema,
   updateUserSchema,
 } from '../validators/usersValidators';
@@ -11,7 +12,7 @@ import { prisma } from '../config/db/prisma';
 import bcrypt from 'bcrypt';
 import generateToken from '../utils/generateToken';
 import { Request, Response } from 'express';
-import { sendSingleMail } from '../services/emailService';
+import { sendBulkMail, sendSingleMail } from '../services/emailService';
 import crypto from 'crypto';
 
 // @desc Authenticate User
@@ -383,6 +384,47 @@ const sendMail = asyncHandler(
   }
 );
 
+// @desc Send mail to All parent/sponsor
+// @route POST /users/mails-bulk
+// @privacy Private Admin
+const sendMultipleMails = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const validateData = sendBulkMailSchema.parse(req.body);
+      const { subject, text } = validateData;
+
+      const user = req.user;
+      if (!user) {
+        res.status(401);
+        throw new Error('Unauthorized!');
+      }
+
+      if (!user.isAdmin) {
+        res.status(401);
+        throw new Error('Unauthorized Contact the adminitration');
+      }
+      const sponsorEmailsRaw = await prisma.student.findMany({
+        select: { sponsorEmail: true },
+      });
+
+      const sponsorEmails = sponsorEmailsRaw
+        .map((s) => s.sponsorEmail)
+        .filter((email): email is string => Boolean(email));
+
+      if (sponsorEmails.length === 0) {
+        res.status(404);
+        throw new Error('No valid sponsor emails found');
+      }
+
+      await sendBulkMail({ emails: sponsorEmails, subject, text });
+
+      res.status(200).json('Email sent successfully');
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
 // @desc Send reset password link
 // @route POST api/users/forget-password
 // @privacy Public
@@ -510,6 +552,7 @@ export {
   getUserById,
   deleteUser,
   sendMail,
+  sendMultipleMails,
   forgetPassword,
   resetPassword,
 };

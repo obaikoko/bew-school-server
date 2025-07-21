@@ -45,7 +45,6 @@ export const sendSingleMailSchema = z.object({
 });
 
 export const sendBulkMailSchema = z.object({
-  emails: z.array(z.string()),
   subject: z.string().min(1, 'Subject is required'),
   text: z.string().min(1, 'Email body text is required'),
 });

@@ -44,7 +44,6 @@ exports.sendSingleMailSchema = zod_1.z.object({
     text: zod_1.z.string().min(1, 'Email body text is required'),
 });
 exports.sendBulkMailSchema = zod_1.z.object({
-    emails: zod_1.z.array(zod_1.z.string()),
     subject: zod_1.z.string().min(1, 'Subject is required'),
     text: zod_1.z.string().min(1, 'Email body text is required'),
 });

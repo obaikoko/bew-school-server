@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgetPassword = exports.sendMail = exports.deleteUser = exports.getUserById = exports.getUsers = exports.updateUser = exports.getUserProfile = exports.logoutUser = exports.authUser = exports.registerUser = void 0;
+exports.resetPassword = exports.forgetPassword = exports.sendMultipleMails = exports.sendMail = exports.deleteUser = exports.getUserById = exports.getUsers = exports.updateUser = exports.getUserProfile = exports.logoutUser = exports.authUser = exports.registerUser = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const usersValidators_1 = require("../validators/usersValidators");
 const prisma_1 = require("../config/db/prisma");
@@ -348,6 +348,40 @@ const sendMail = (0, express_async_handler_1.default)((req, res) => __awaiter(vo
     }
 }));
 exports.sendMail = sendMail;
+// @desc Send mail to All parent/sponsor
+// @route POST /users/mails-bulk
+// @privacy Private Admin
+const sendMultipleMails = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const validateData = usersValidators_1.sendBulkMailSchema.parse(req.body);
+        const { subject, text } = validateData;
+        const user = req.user;
+        if (!user) {
+            res.status(401);
+            throw new Error('Unauthorized!');
+        }
+        if (!user.isAdmin) {
+            res.status(401);
+            throw new Error('Unauthorized Contact the adminitration');
+        }
+        const sponsorEmailsRaw = yield prisma_1.prisma.student.findMany({
+            select: { sponsorEmail: true },
+        });
+        const sponsorEmails = sponsorEmailsRaw
+            .map((s) => s.sponsorEmail)
+            .filter((email) => Boolean(email));
+        if (sponsorEmails.length === 0) {
+            res.status(404);
+            throw new Error('No valid sponsor emails found');
+        }
+        yield (0, emailService_1.sendBulkMail)({ emails: sponsorEmails, subject, text });
+        res.status(200).json('Email sent successfully');
+    }
+    catch (error) {
+        throw error;
+    }
+}));
+exports.sendMultipleMails = sendMultipleMails;
 // @desc Send reset password link
 // @route POST api/users/forget-password
 // @privacy Public

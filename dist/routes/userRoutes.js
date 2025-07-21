@@ -10,6 +10,7 @@ const router = express_1.default.Router();
 router.route('/').get(authMiddleware_1.protect, authMiddleware_1.admin, userController_1.getUsers);
 router.route('/register').post(userController_1.registerUser);
 router.route('/auth').post(userController_1.authUser);
+router.post('/mails-bulk', authMiddleware_1.protect, authMiddleware_1.admin, userController_1.sendMultipleMails);
 router.post('/mails', authMiddleware_1.protect, authMiddleware_1.admin, userController_1.sendMail);
 router.post('/logout', userController_1.logoutUser);
 router.route('/forget-password').post(userController_1.forgetPassword);
