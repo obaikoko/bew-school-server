@@ -375,7 +375,7 @@ const sendMail = asyncHandler(
         throw new Error('Unauthorized Contact the adminitration');
       }
 
-      sendSingleMail({ email, subject, text });
+      await sendSingleMail({ email, subject, text });
       res.status(200);
       res.json('Email sent successfully');
     } catch (error) {

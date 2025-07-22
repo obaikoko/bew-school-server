@@ -339,7 +339,7 @@ const sendMail = (0, express_async_handler_1.default)((req, res) => __awaiter(vo
             res.status(401);
             throw new Error('Unauthorized Contact the adminitration');
         }
-        (0, emailService_1.sendSingleMail)({ email, subject, text });
+        yield (0, emailService_1.sendSingleMail)({ email, subject, text });
         res.status(200);
         res.json('Email sent successfully');
     }

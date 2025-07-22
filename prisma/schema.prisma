@@ -8,22 +8,23 @@ datasource db {
 }
 
 model User {
-  id                   String    @id @default(auto()) @map("_id") @db.ObjectId
-  email                String    @unique
+  id                   String         @id @default(auto()) @map("_id") @db.ObjectId
+  email                String         @unique
   firstName            String
   lastName             String
-  role                 String    @default("teacher")
-  status               String    @default("active")
+  role                 String         @default("teacher")
+  status               String         @default("active")
   level                String?
   subLevel             String?
   password             String
   resetPasswordToken   String?
   resetPasswordExpires DateTime?
-  isAdmin              Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  isAdmin              Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
   student              Student[]
   result               Result[]
+  schemeOfWork         SchemeOfWork[]
 }
 
 model Student {
@@ -179,4 +180,41 @@ model Event {
   imagePublicId String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Announcement {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  createdBy String
+  target    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SchemeOfWork {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  subject    String
+  level      String // e.g., Primary 1
+  term       String // First, Second, Third
+  topics     String[] // List of topics
+  uploadedBy User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String   @db.ObjectId
+}
+
+model TimeTable {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  level     String
+  day       String
+  periods   Period[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+type Period {
+  subject   String
+  startTime String
+  endTime   String
 }

@@ -30,7 +30,7 @@ const sendSingleMail = (_a) => __awaiter(void 0, [_a], void 0, function* ({ emai
         const mailOptions = {
             from: {
                 name: 'BERYL INTERNATIONAL SCHOOLS',
-                address: 'admin@berylintlschl.com',
+                address: 'administrator@berylintlschl.com',
             },
             to: email,
             subject,
@@ -53,7 +53,7 @@ const sendSingleMail = (_a) => __awaiter(void 0, [_a], void 0, function* ({ emai
 
   <div style="text-align: center; font-size: 13px; color: #999;">
     <p>If you have any questions, contact us at 
-      <a href="mailto:admin@berylintlschs.org" style="color: #004b87; text-decoration: none;">admin@berylintlschs.org</a>.
+      <a href="mailto:administrator@berylintlschl.com" style="color: #004b87; text-decoration: none;">administrator@berylintlschl.com</a>.
     </p>
     <p style="margin-top: 4px;">&copy; 2025 Beryl International Schools. All rights reserved.</p>
   </div>
