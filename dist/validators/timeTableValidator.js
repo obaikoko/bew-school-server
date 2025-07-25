@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.timeTableIdSchema = exports.updateTimeTableSchema = exports.createTimeTableSchema = void 0;
+exports.timeTableIdSchema = exports.updateTimeTableSchema = exports.createManyTimeTablesSchema = exports.createTimeTableSchema = void 0;
 const zod_1 = require("zod");
 const periodSchema = zod_1.z.object({
     subject: zod_1.z.string().min(1),
@@ -9,9 +9,11 @@ const periodSchema = zod_1.z.object({
 });
 exports.createTimeTableSchema = zod_1.z.object({
     level: zod_1.z.string().min(1),
+    subLevel: zod_1.z.string().min(1),
     day: zod_1.z.string().min(1),
     periods: zod_1.z.array(periodSchema).min(1),
 });
+exports.createManyTimeTablesSchema = zod_1.z.array(exports.createTimeTableSchema);
 exports.updateTimeTableSchema = zod_1.z.object({
     level: zod_1.z.string().min(1).optional(),
     day: zod_1.z.string().min(1).optional(),

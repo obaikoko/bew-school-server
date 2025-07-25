@@ -207,6 +207,7 @@ model SchemeOfWork {
 model TimeTable {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   level     String
+  subLevel  String
   day       String
   periods   Period[]
   createdAt DateTime @default(now())

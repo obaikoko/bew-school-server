@@ -8,9 +8,11 @@ const periodSchema = z.object({
 
 export const createTimeTableSchema = z.object({
   level: z.string().min(1),
+  subLevel: z.string().min(1),
   day: z.string().min(1),
   periods: z.array(periodSchema).min(1),
 });
+export const createManyTimeTablesSchema = z.array(createTimeTableSchema);
 
 export const updateTimeTableSchema = z.object({
   level: z.string().min(1).optional(),

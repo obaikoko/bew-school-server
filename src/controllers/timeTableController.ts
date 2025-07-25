@@ -5,25 +5,78 @@ import {
   createTimeTableSchema,
   updateTimeTableSchema,
   timeTableIdSchema,
+  createManyTimeTablesSchema,
 } from '../validators/timeTableValidator';
 
 const createTimeTable = asyncHandler(async (req: Request, res: Response) => {
-  const validated = createTimeTableSchema.parse(req.body);
+  const validated = createManyTimeTablesSchema.parse(req.body);
 
-  const timetable = await prisma.timeTable.create({
+  const result = await prisma.timeTable.createMany({
     data: validated,
   });
 
-  res.status(201).json(timetable);
+  res.status(201).json({ message: 'Time tables created', count: result.count });
 });
 
-const getAllTimeTables = asyncHandler(async (_req: Request, res: Response) => {
-  const timetables = await prisma.timeTable.findMany({
-    orderBy: { createdAt: 'desc' },
+const getAllTimeTables = asyncHandler(async (req: Request, res: Response) => {
+  let timeTables;
+  if (req.user?.isAdmin) {
+    timeTables = await prisma.timeTable.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!timeTables) {
+      res.status(404);
+      throw new Error('Time table not found');
+    }
+  } else if (!req.user?.isAdmin && req.user?.level && req.user?.subLevel) {
+    timeTables = await prisma.timeTable.findFirst({
+      where: { level: req.user.level, subLevel: req.user.subLevel },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!timeTables) {
+      res.status(404);
+      throw new Error('Time table not found');
+    }
+  } else if (req.student) {
+    timeTables = await prisma.timeTable.findFirst({
+      where: { level: req.student.level, subLevel: req.student.subLevel },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!timeTables) {
+      res.status(404);
+      throw new Error('Time table not found');
+    }
+  }
+
+  res.json(timeTables);
+});
+
+// GET /api/time-table/class?level=JSS%201&subLevel=A
+
+const getTimeTableForClass = asyncHandler(async (req: Request, res: Response) => {
+  const { level, subLevel } = req.query;
+
+  if (!level || !subLevel) {
+    res.status(400);
+    throw new Error('Level and SubLevel are required');
+  }
+
+  const weekTimeTable = await prisma.timeTable.findMany({
+    where: {
+      level: level as string,
+      subLevel: subLevel as string,
+    },
+    orderBy: {
+      day: 'asc', 
+    },
   });
 
-  res.json(timetables);
+
+  res.json(weekTimeTable);
 });
+
 
 const getTimeTableById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = timeTableIdSchema.parse(req.params);
@@ -76,6 +129,7 @@ export {
   createTimeTable,
   getAllTimeTables,
   getTimeTableById,
+  getTimeTableForClass,
   updateTimeTable,
   deleteTimeTable,
 };

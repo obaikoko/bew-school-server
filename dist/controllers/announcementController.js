@@ -31,23 +31,77 @@ exports.createAnnouncement = createAnnouncement;
 // @desc Get  announcements
 // @Privacy Privateexport
 const getAllAnnouncements = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const announcements = yield prisma_1.prisma.announcement.findMany({
-        orderBy: { createdAt: 'desc' },
-    });
-    res.json(announcements);
+    var _a;
+    let userAnnouncements;
+    if ((_a = req.user) === null || _a === void 0 ? void 0 : _a.isAdmin) {
+        // Admin: See all
+        userAnnouncements = yield prisma_1.prisma.announcement.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    else if (req.student) {
+        // Student: See "ALL" or "STUDENT"
+        userAnnouncements = yield prisma_1.prisma.announcement.findMany({
+            where: {
+                target: { in: ['All', 'Student'] },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    else {
+        // Teacher (or other non-admin): See "ALL" or "TEACHER"
+        userAnnouncements = yield prisma_1.prisma.announcement.findMany({
+            where: {
+                target: { in: ['All', 'Teacher'] },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    res.json(userAnnouncements);
 }));
 exports.getAllAnnouncements = getAllAnnouncements;
 // @route GET announcement/:id
 // @desc Get  announcement by ID
 // @Privacy Private
 const getAnnouncementById = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { id } = announcementValidator_1.announcementIdSchema.parse(req.params);
-    const announcement = yield prisma_1.prisma.announcement.findUnique({
-        where: { id },
-    });
-    if (!announcement) {
-        res.status(404);
-        throw new Error('Announcement not found');
+    let announcement;
+    if ((_a = req.user) === null || _a === void 0 ? void 0 : _a.isAdmin) {
+        // Admin: See all
+        announcement = yield prisma_1.prisma.announcement.findUnique({
+            where: { id },
+        });
+        if (!announcement) {
+            res.status(404);
+            throw new Error('Announcement not found');
+        }
+    }
+    else if (req.student) {
+        // Student: See "ALL" or "STUDENT"
+        announcement = yield prisma_1.prisma.announcement.findUnique({
+            where: {
+                id,
+                target: { in: ['All', 'Student'] },
+            },
+        });
+        if (!announcement) {
+            res.status(404);
+            throw new Error('Announcement not found');
+        }
+    }
+    else {
+        // Teacher (or other non-admin): See "ALL" or "TEACHER"
+        announcement = yield prisma_1.prisma.announcement.findUnique({
+            where: {
+                id,
+                target: { in: ['All', 'Teacher'] },
+            },
+        });
+        if (!announcement) {
+            res.status(404);
+            throw new Error('Announcement not found');
+        }
     }
     res.json(announcement);
 }));

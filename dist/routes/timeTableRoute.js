@@ -9,6 +9,7 @@ const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
 router.route('/add').post(authMiddleware_1.protect, authMiddleware_1.admin, timeTableController_1.createTimeTable);
 router.route('/').get(authMiddleware_1.protect, timeTableController_1.getAllTimeTables);
+router.route('/search').get(authMiddleware_1.protect, timeTableController_1.getTimeTableForClass);
 router
     .route('/:id')
     .get(authMiddleware_1.protect, timeTableController_1.getTimeTableById)
