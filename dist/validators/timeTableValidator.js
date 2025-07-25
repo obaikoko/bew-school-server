@@ -16,6 +16,7 @@ exports.createTimeTableSchema = zod_1.z.object({
 exports.createManyTimeTablesSchema = zod_1.z.array(exports.createTimeTableSchema);
 exports.updateTimeTableSchema = zod_1.z.object({
     level: zod_1.z.string().min(1).optional(),
+    subLevel: zod_1.z.string().min(1),
     day: zod_1.z.string().min(1).optional(),
     periods: zod_1.z.array(periodSchema).optional(),
 });

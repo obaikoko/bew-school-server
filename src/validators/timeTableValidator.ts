@@ -16,6 +16,7 @@ export const createManyTimeTablesSchema = z.array(createTimeTableSchema);
 
 export const updateTimeTableSchema = z.object({
   level: z.string().min(1).optional(),
+  subLevel: z.string().min(1),
   day: z.string().min(1).optional(),
   periods: z.array(periodSchema).optional(),
 });

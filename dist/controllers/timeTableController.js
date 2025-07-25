@@ -17,11 +17,24 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const prisma_1 = require("../config/db/prisma");
 const timeTableValidator_1 = require("../validators/timeTableValidator");
 const createTimeTable = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const validated = timeTableValidator_1.createManyTimeTablesSchema.parse(req.body);
-    const result = yield prisma_1.prisma.timeTable.createMany({
+    const validated = timeTableValidator_1.createTimeTableSchema.parse(req.body);
+    const { level, subLevel, day } = validated;
+    // check if time table for specific day already exist
+    const timeTableExist = yield prisma_1.prisma.timeTable.findFirst({
+        where: {
+            level,
+            subLevel,
+            day,
+        },
+    });
+    if (timeTableExist) {
+        res.status(400);
+        throw new Error(`Time table for ${day} ${level}-${subLevel} already Exist`);
+    }
+    const result = yield prisma_1.prisma.timeTable.create({
         data: validated,
     });
-    res.status(201).json({ message: 'Time tables created', count: result.count });
+    res.status(201).json(result);
 }));
 exports.createTimeTable = createTimeTable;
 const getAllTimeTables = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -89,16 +102,22 @@ const getTimeTableById = (0, express_async_handler_1.default)((req, res) => __aw
 }));
 exports.getTimeTableById = getTimeTableById;
 const updateTimeTable = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = timeTableValidator_1.timeTableIdSchema.parse(req.params);
     const validated = timeTableValidator_1.updateTimeTableSchema.parse(req.body);
-    const existing = yield prisma_1.prisma.timeTable.findUnique({ where: { id } });
+    const { day, level, subLevel, periods } = validated;
+    const existing = yield prisma_1.prisma.timeTable.findFirst({
+        where: {
+            day,
+            level,
+            subLevel,
+        },
+    });
     if (!existing) {
         res.status(404);
         throw new Error('Timetable not found');
     }
     const updated = yield prisma_1.prisma.timeTable.update({
-        where: { id },
-        data: validated,
+        where: { id: existing.id },
+        data: { periods },
     });
     res.json(updated);
 }));

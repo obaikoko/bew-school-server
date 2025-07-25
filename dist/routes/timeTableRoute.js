@@ -10,9 +10,9 @@ const router = express_1.default.Router();
 router.route('/add').post(authMiddleware_1.protect, authMiddleware_1.admin, timeTableController_1.createTimeTable);
 router.route('/').get(authMiddleware_1.protect, timeTableController_1.getAllTimeTables);
 router.route('/search').get(authMiddleware_1.protect, timeTableController_1.getTimeTableForClass);
+router.route('/edit').put(authMiddleware_1.protect, authMiddleware_1.admin, timeTableController_1.updateTimeTable);
 router
     .route('/:id')
     .get(authMiddleware_1.protect, timeTableController_1.getTimeTableById)
-    .put(authMiddleware_1.protect, authMiddleware_1.admin, timeTableController_1.updateTimeTable)
     .delete(authMiddleware_1.protect, authMiddleware_1.admin, timeTableController_1.deleteTimeTable);
 exports.default = router;

@@ -15,10 +15,10 @@ const router = express.Router();
 router.route('/add').post(protect, admin, createTimeTable);
 router.route('/').get(protect, getAllTimeTables);
 router.route('/search').get(protect, getTimeTableForClass);
+router.route('/edit').put(protect, admin, updateTimeTable);
 router
   .route('/:id')
   .get(protect, getTimeTableById)
-  .put(protect, admin, updateTimeTable)
   .delete(protect, admin, deleteTimeTable);
 
 export default router;

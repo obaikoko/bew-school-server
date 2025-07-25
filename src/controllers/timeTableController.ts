@@ -9,13 +9,28 @@ import {
 } from '../validators/timeTableValidator';
 
 const createTimeTable = asyncHandler(async (req: Request, res: Response) => {
-  const validated = createManyTimeTablesSchema.parse(req.body);
+  const validated = createTimeTableSchema.parse(req.body);
+  const { level, subLevel, day } = validated;
+  // check if time table for specific day already exist
 
-  const result = await prisma.timeTable.createMany({
+  const timeTableExist = await prisma.timeTable.findFirst({
+    where: {
+      level,
+      subLevel,
+      day,
+    },
+  });
+
+  if (timeTableExist) {
+    res.status(400);
+    throw new Error(`Time table for ${day} ${level}-${subLevel} already Exist`);
+  }
+
+  const result = await prisma.timeTable.create({
     data: validated,
   });
 
-  res.status(201).json({ message: 'Time tables created', count: result.count });
+  res.status(201).json(result);
 });
 
 const getAllTimeTables = asyncHandler(async (req: Request, res: Response) => {
@@ -55,28 +70,28 @@ const getAllTimeTables = asyncHandler(async (req: Request, res: Response) => {
 
 // GET /api/time-table/class?level=JSS%201&subLevel=A
 
-const getTimeTableForClass = asyncHandler(async (req: Request, res: Response) => {
-  const { level, subLevel } = req.query;
+const getTimeTableForClass = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { level, subLevel } = req.query;
 
-  if (!level || !subLevel) {
-    res.status(400);
-    throw new Error('Level and SubLevel are required');
+    if (!level || !subLevel) {
+      res.status(400);
+      throw new Error('Level and SubLevel are required');
+    }
+
+    const weekTimeTable = await prisma.timeTable.findMany({
+      where: {
+        level: level as string,
+        subLevel: subLevel as string,
+      },
+      orderBy: {
+        day: 'asc',
+      },
+    });
+
+    res.json(weekTimeTable);
   }
-
-  const weekTimeTable = await prisma.timeTable.findMany({
-    where: {
-      level: level as string,
-      subLevel: subLevel as string,
-    },
-    orderBy: {
-      day: 'asc', 
-    },
-  });
-
-
-  res.json(weekTimeTable);
-});
-
+);
 
 const getTimeTableById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = timeTableIdSchema.parse(req.params);
@@ -92,10 +107,16 @@ const getTimeTableById = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const updateTimeTable = asyncHandler(async (req: Request, res: Response) => {
-  const { id } = timeTableIdSchema.parse(req.params);
   const validated = updateTimeTableSchema.parse(req.body);
+  const { day, level, subLevel, periods } = validated;
 
-  const existing = await prisma.timeTable.findUnique({ where: { id } });
+  const existing = await prisma.timeTable.findFirst({
+    where: {
+      day,
+      level,
+      subLevel,
+    },
+  });
 
   if (!existing) {
     res.status(404);
@@ -103,8 +124,8 @@ const updateTimeTable = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const updated = await prisma.timeTable.update({
-    where: { id },
-    data: validated,
+    where: { id: existing.id },
+    data: { periods },
   });
 
   res.json(updated);
