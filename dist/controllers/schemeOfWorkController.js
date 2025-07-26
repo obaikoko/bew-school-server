@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteScheme = exports.updateScheme = exports.getSchemeById = exports.getAllSchemes = exports.createScheme = void 0;
+exports.deleteScheme = exports.updateScheme = exports.getClassScheme = exports.getSchemeById = exports.getAllSchemes = exports.createScheme = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = require("../config/db/prisma");
 const schemeOfWorkValidator_1 = require("../validators/schemeOfWorkValidator");
@@ -35,6 +35,23 @@ const getAllSchemes = (0, express_async_handler_1.default)((_req, res) => __awai
     res.json(schemes);
 }));
 exports.getAllSchemes = getAllSchemes;
+const getClassScheme = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { level, term, subject } = req.query;
+    if (!level || !term || !subject) {
+        res.status(400);
+        throw new Error('Please add all fields');
+    }
+    const schemes = yield prisma_1.prisma.schemeOfWork.findMany({
+        where: {
+            level: level,
+            term: term,
+            subject: subject,
+        },
+        orderBy: { createdAt: 'desc' },
+    });
+    res.json(schemes);
+}));
+exports.getClassScheme = getClassScheme;
 const getSchemeById = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = schemeOfWorkValidator_1.schemeIdSchema.parse(req.params);
     const scheme = yield prisma_1.prisma.schemeOfWork.findUnique({ where: { id } });

@@ -9,6 +9,7 @@ const authMiddleware_1 = require("../middleware/authMiddleware");
 const router = express_1.default.Router();
 router.route('/add').post(authMiddleware_1.protect, schemeOfWorkController_1.createScheme);
 router.route('/').get(authMiddleware_1.protect, authMiddleware_1.admin, schemeOfWorkController_1.getAllSchemes);
+router.route('/search').get(authMiddleware_1.protect, schemeOfWorkController_1.getClassScheme);
 router
     .route('/:id')
     .get(authMiddleware_1.protect, schemeOfWorkController_1.getSchemeById)

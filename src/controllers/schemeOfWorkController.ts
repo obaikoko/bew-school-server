@@ -31,6 +31,23 @@ const getAllSchemes = asyncHandler(async (_req: Request, res: Response) => {
 
   res.json(schemes);
 });
+const getClassScheme = asyncHandler(async (req: Request, res: Response) => {
+  const { level, term, subject } = req.query;
+  if (!level || !term || !subject) {
+    res.status(400);
+    throw new Error('Please add all fields');
+  }
+  const schemes = await prisma.schemeOfWork.findMany({
+    where: {
+      level: level as string,
+      term: term as string,
+      subject: subject as string,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  res.json(schemes);
+});
 
 const getSchemeById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = schemeIdSchema.parse(req.params);
@@ -83,6 +100,7 @@ export {
   createScheme,
   getAllSchemes,
   getSchemeById,
+  getClassScheme,
   updateScheme,
   deleteScheme,
 };

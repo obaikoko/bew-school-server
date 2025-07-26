@@ -195,13 +195,17 @@ model Announcement {
 model SchemeOfWork {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   subject    String
-  level      String // e.g., Primary 1
-  term       String // First, Second, Third
-  topics     String[] // List of topics
+  level      String 
+  term       String 
+  topics     Topic[] 
   uploadedBy User     @relation(fields: [userId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   userId     String   @db.ObjectId
+}
+type Topic {
+week Int
+topic String[]
 }
 
 model TimeTable {
