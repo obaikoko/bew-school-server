@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.schemeIdSchema = exports.updateSchemeSchema = exports.createSchemeSchema = void 0;
 const zod_1 = require("zod");
 const topicSchema = zod_1.z.object({
-    week: zod_1.z.number(),
+    week: zod_1.z.coerce.number(),
     topic: zod_1.z.string().array(),
 });
 exports.createSchemeSchema = zod_1.z.object({

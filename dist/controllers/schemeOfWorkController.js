@@ -22,10 +22,22 @@ const createScheme = (0, express_async_handler_1.default)((req, res) => __awaite
         throw new Error('Unauthorized');
     }
     const validated = schemeOfWorkValidator_1.createSchemeSchema.parse(req.body);
+    // Check if scheme already exists for the same subject, level, and term
+    const existingScheme = yield prisma_1.prisma.schemeOfWork.findFirst({
+        where: {
+            subject: validated.subject,
+            level: validated.level,
+            term: validated.term,
+        },
+    });
+    if (existingScheme) {
+        res.status(400);
+        throw new Error('Scheme for this subject, level, and term already exists.');
+    }
     const scheme = yield prisma_1.prisma.schemeOfWork.create({
         data: Object.assign(Object.assign({}, validated), { userId: req.user.id }),
     });
-    res.status(201).json(scheme);
+    res.status(201).json({ scheme, message: 'Scheme added successfully' });
 }));
 exports.createScheme = createScheme;
 const getAllSchemes = (0, express_async_handler_1.default)((_req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -74,7 +86,7 @@ const updateScheme = (0, express_async_handler_1.default)((req, res) => __awaite
         where: { id },
         data: validated,
     });
-    res.json(updated);
+    res.json({ updated, message: 'Updated successfully' });
 }));
 exports.updateScheme = updateScheme;
 const deleteScheme = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {

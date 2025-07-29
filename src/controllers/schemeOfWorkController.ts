@@ -6,13 +6,27 @@ import {
   updateSchemeSchema,
   schemeIdSchema,
 } from '../validators/schemeOfWorkValidator';
-
 const createScheme = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     res.status(401);
     throw new Error('Unauthorized');
   }
+
   const validated = createSchemeSchema.parse(req.body);
+
+  // Check if scheme already exists for the same subject, level, and term
+  const existingScheme = await prisma.schemeOfWork.findFirst({
+    where: {
+      subject: validated.subject,
+      level: validated.level,
+      term: validated.term,
+    },
+  });
+
+  if (existingScheme) {
+    res.status(400);
+    throw new Error('Scheme for this subject, level, and term already exists.');
+  }
 
   const scheme = await prisma.schemeOfWork.create({
     data: {
@@ -21,7 +35,7 @@ const createScheme = asyncHandler(async (req: Request, res: Response) => {
     },
   });
 
-  res.status(201).json(scheme);
+  res.status(201).json({ scheme, message: 'Scheme added successfully' });
 });
 
 const getAllSchemes = asyncHandler(async (_req: Request, res: Response) => {
@@ -78,7 +92,7 @@ const updateScheme = asyncHandler(async (req: Request, res: Response) => {
     data: validated,
   });
 
-  res.json(updated);
+  res.json({ updated, message: 'Updated successfully' });
 });
 
 const deleteScheme = asyncHandler(async (req: Request, res: Response) => {

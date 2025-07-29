@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const topicSchema = z.object({
-  week: z.number(),
+  week: z.coerce.number(),
   topic: z.string().array(),
 });
 export const createSchemeSchema = z.object({
